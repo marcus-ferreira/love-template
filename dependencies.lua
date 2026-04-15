@@ -1,17 +1,12 @@
--- general
-require("libs.general.color")
-require("libs.general.data")
-require("libs.general.state")
-require("libs.general.timer")
-require("libs.general.vector")
-
--- love
-require("libs.love.animation")
-require("libs.love.camera")
-require("libs.love.collision")
-require("libs.love.physics")
-
--- lua
-require("libs.lua.math")
-require("libs.lua.string")
-require("libs.lua.table")
+require("libs.animation")
+require("libs.camera")
+require("libs.collision")
+require("libs.color")
+require("libs.data")
+require("libs.math")
+require("libs.physics")
+require("libs.state")
+require("libs.string")
+require("libs.table")
+require("libs.timer")
+require("libs.vector")

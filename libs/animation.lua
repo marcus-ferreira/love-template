@@ -1,7 +1,7 @@
 --[[
 	Author: Marcus Ferreira
 	Description: A animation library for LOVE.
-	12/01/2026 - 0.3v
+	15/04/2026 - 0.4v
 ]]
 
 
@@ -12,61 +12,63 @@ Animation.__index = Animation
 
 ---@param image love.Image # The image to be used.
 ---@param tileColumns number # The number of the tiles in a row.
----@param tileRows number # The number of the tiles is a collums.
+---@param tileRows number # The number of the tiles in a column.
 ---@param left? number # Where to start to draw from left. Default = 0.
 ---@param top? number # Where to start to draw from top. Default = 0.
----@param offsetX? number # The margin in between tiles collumns. Default = 0.
+---@param offsetX? number # The margin in between tiles columns. Default = 0.
 ---@param offsetY? number # The margin in between tiles rows. Default = 0.
 ---@return table grid # The Grid object.
 function love.graphics.newGrid(image, tileColumns, tileRows, left, top, offsetX, offsetY)
-	tileWidth  = image:getWidth() / tileColumns
-	tileHeight = image:getHeight() / tileRows
-	left       = left or 0
-	top        = top or 0
-	offsetX    = offsetX or 0
-	offsetY    = offsetY or 0
+	local tileWidth = image:getWidth() / tileColumns
+	local tileHeight = image:getHeight() / tileRows
+	left = left or 0
+	top = top or 0
+	offsetX = offsetX or 0
+	offsetY = offsetY or 0
 
-
-	local self = {}
-	for y = top, tileHeight * tileRows - 1, tileHeight + offsetY do
-		for x = left, tileWidth * tileColumns - 1, tileWidth + offsetX do
-			local tile = love.graphics.newQuad(
-				x, y, tileWidth, tileHeight, tileWidth * tileColumns, tileHeight * tileRows
-			)
-			table.insert(self, tile)
+	local grid = {}
+	for row = 0, tileRows - 1 do
+		for col = 0, tileColumns - 1 do
+			local x = left + col * (tileWidth + offsetX)
+			local y = top + row * (tileHeight + offsetY)
+			local quad = love.graphics.newQuad(x, y, tileWidth, tileHeight, image:getWidth(), image:getHeight())
+			table.insert(grid, quad)
 		end
 	end
-	return self
+	return grid
 end
 
 ---@param image love.Image # The image to be used.
+---@param grid table # The grid of quads created by newGrid.
 ---@param frames table # A table of the numbers of the quads in order.
+---@param originX? number # The X origin for drawing. Default = 0.
+---@param originY? number # The Y origin for drawing. Default = 0.
 ---@param interval? number # The interval between frame quads, in seconds. Default = 1.
 ---@param loop? boolean # True if the animation should be looped or false if contrary. Default = true.
 ---@return Animation animation # The new Animation object.
 function love.graphics.newAnimation(image, grid, frames, originX, originY, interval, loop)
-	originX  = originX or 0
-	originY  = originY or 0
+	originX = originX or 0
+	originY = originY or 0
 	interval = interval or 1
-	loop     = loop == nil and true or false
+	loop = loop == nil and true or loop
 
 
 	---@class Animation
-	local self             = setmetatable({}, Animation)
-	self.image             = image
-	self.grid              = grid
-	self.frames            = frames
+	local self = setmetatable({}, Animation)
+	self.image = image
+	self.grid = grid
+	self.frames = frames
 	self.currentFrameIndex = 1
-	self.originX           = originX
-	self.originY           = originY
-	self.interval          = interval
-	self.loop              = loop
-	self.timer             = 0
-	self.states            = {
+	self.originX = originX
+	self.originY = originY
+	self.interval = interval
+	self.loop = loop
+	self.timer = 0
+	self.states = {
 		PLAYING = 1,
 		STOPPED = 2
 	}
-	self.currentState      = self.states.PLAYING
+	self.currentState = self.states.PLAYING
 	return self
 end
 
