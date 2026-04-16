@@ -7,6 +7,7 @@
 ---@class color
 color = {}
 
+
 ---Converts a hex (given without '#') value to RGB. (output range: 0 - 1)
 ---@param hex string # The hex color value (e.g. "ff0000" for red or "f00" for red).
 ---@return number? R # The red component of the color (0 - 1).
@@ -23,6 +24,6 @@ function color.hexToRGB(hex)
 			tonumber("0x" .. hex:sub(3, 4)) / 255,
 			tonumber("0x" .. hex:sub(5, 6)) / 255
 	else
-		error("Formato hexadecimal inválido.")
+		error("Invalid hexadecimal format.")
 	end
 end

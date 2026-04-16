@@ -10,14 +10,14 @@
 ---@param x2 number # The X coordinate of the second vector.
 ---@param y2 number # The Y coordinate of the second vector.
 ---@return number # The angle between the two vectors, in radians.
-function love.math.angle(x1, y1, x2, y2)
+function math.angle(x1, y1, x2, y2)
 	return math.atan2(y2 - y1, x2 - x1)
 end
 
 ---Averages an arbitrary number of angles (in radians).
 ---@param ... unknown # The angles to average.
 ---@return number # The average angle, in radians.
-function love.math.averageAngles(...)
+function math.averageAngles(...)
 	local x, y = 0, 0
 	for i = 1, select('#', ...) do
 		local a = select(i, ...)
@@ -31,7 +31,7 @@ end
 ---@param b number # The second number.
 ---@param t number # The interpolation parameter.
 ---@return number # The interpolated number.
-function love.math.cerp(a, b, t)
+function math.cerp(a, b, t)
 	local f = (1 - math.cos(t * math.pi)) * 0.5
 	return a * (1 - f) + b * f
 end
@@ -42,9 +42,9 @@ end
 ---@param l2p1 table # The first point of the second line segment.
 ---@param l2p2 table # The second point of the second line segment.
 ---@return boolean # Whether the line segments intersect.
-function love.math.checkIntersect(l1p1, l1p2, l2p1, l2p2)
+function math.checkIntersect(l1p1, l1p2, l2p1, l2p2)
 	local function checkDir(pt1, pt2, pt3)
-		return love.math.sign(((pt2.x - pt1.x) * (pt3.y - pt1.y)) -
+		return math.sign(((pt2.x - pt1.x) * (pt3.y - pt1.y)) -
 			((pt3.x - pt1.x) * (pt2.y - pt1.y)))
 	end
 	return (checkDir(l1p1, l1p2, l2p1) ~= checkDir(l1p1, l1p2, l2p2)) and
@@ -56,7 +56,7 @@ end
 ---@param n number # The number to clamp.
 ---@param high number # The upper bound.
 ---@return number # The clamped number.
-function love.math.clamp(low, n, high)
+function math.clamp(low, n, high)
 	return math.min(math.max(low, n), high)
 end
 
@@ -66,7 +66,7 @@ end
 ---@param x2 number # The X coordinate of the second point.
 ---@param y2 number # The Y coordinate of the second point.
 ---@return number # The distance between the two points.
-function love.math.dist2(x1, y1, x2, y2)
+function math.dist2(x1, y1, x2, y2)
 	return ((x2 - x1) ^ 2 + (y2 - y1) ^ 2) ^ 0.5
 end
 
@@ -78,7 +78,7 @@ end
 ---@param y2 number # The Y coordinate of the second point.
 ---@param z2 number # The Z coordinate of the second point.
 ---@return number # The distance between the two points.
-function love.math.dist3(x1, y1, z1, x2, y2, z2)
+function math.dist3(x1, y1, z1, x2, y2, z2)
 	return ((x2 - x1) ^ 2 + (y2 - y1) ^ 2 + (z2 - z1) ^ 2) ^ 0.5
 end
 
@@ -95,7 +95,7 @@ end
 ---@param seg2? table # Whether the second line is a segment.
 ---@return boolean | number # Whether the lines intersect, or the X coordinate of the intersection point.
 ---@return string | number # An error message or the Y coordinate of the intersection point.
-function love.math.findIntersect(l1p1x, l1p1y, l1p2x, l1p2y, l2p1x, l2p1y, l2p2x, l2p2y, seg1, seg2)
+function math.findIntersect(l1p1x, l1p1y, l1p2x, l1p2y, l2p1x, l2p1y, l2p2x, l2p2y, seg1, seg2)
 	local a1, b1, a2, b2 = l1p2y - l1p1y, l1p1x - l1p2x, l2p2y - l2p1y, l2p1x - l2p2x
 	local c1, c2 = a1 * l1p1x + b1 * l1p1y, a2 * l2p1x + b2 * l2p1y
 	local det = a1 * b2 - a2 * b1
@@ -116,7 +116,7 @@ end
 ---@param b number # The second number.
 ---@param t number # The interpolation parameter.
 ---@return number # The interpolated number.
-function love.math.lerp(a, b, t)
+function math.lerp(a, b, t)
 	return (1 - t) * a + t * b
 end
 
@@ -125,7 +125,7 @@ end
 ---@param b number # The second number.
 ---@param t number # The interpolation parameter.
 ---@return number # The interpolated number.
-function love.math.lerp2(a, b, t)
+function math.lerp2(a, b, t)
 	return a + (b - a) * t
 end
 
@@ -133,7 +133,7 @@ end
 ---@param n number # The number to round.
 ---@param size? number # The size of the multiples.
 ---@return number # The closest multiple.
-function love.math.multiple(n, size)
+function math.multiple(n, size)
 	size = size or 10
 	return math.floor(n / size + 0.5) * size
 end
@@ -144,7 +144,7 @@ end
 ---@return integer # The normalized X coordinate.
 ---@return integer # The normalized Y coordinate.
 ---@return integer # The length of the vector.
-function love.math.normalize(x, y)
+function math.normalize(x, y)
 	local l = (x * x + y * y) ^ 0.5
 	if l == 0 then
 		return 0, 0, 0
@@ -157,28 +157,30 @@ end
 ---@param min number # The minimum value.
 ---@param max number # The maximum value.
 ---@return number # The random number.
-function love.math.prandom(min, max)
-	return love.math.random() * (max - min) + min
+function math.prandom(min, max)
+	math.randomseed(os.time())
+	return math.random() * (max - min) + min
 end
 
 ---Returns 'n' rounded to the nearest 'deci'th (defaulting whole numbers).
 ---@param n number # The number to round.
 ---@param deci? number # The number of decimal places to round to.
 ---@return number # The rounded number.
-function love.math.round(n, deci)
+function math.round(n, deci)
 	deci = 10 ^ (deci or 0)
 	return math.floor(n * deci + 0.5) / deci
 end
 
 ---Randomly returns either -1 or 1.
 ---@return integer # Either -1 or 1.
-function love.math.rsign()
-	return love.math.random(2) == 2 and 1 or -1
+function math.rsign()
+	math.randomseed(os.time())
+	return math.random(2) == 2 and 1 or -1
 end
 
 ---Returns 1 if number is positive, -1 if it's negative, or 0 if it's 0.
 ---@param n number # The number to evaluate.
 ---@return integer # The sign of the number.
-function love.math.sign(n)
+function math.sign(n)
 	return n > 0 and 1 or n < 0 and -1 or 0
 end

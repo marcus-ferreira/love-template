@@ -4,7 +4,6 @@ function love.load()
     -- Setups the game
     love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setNewFont("assets/fonts/love.ttf", 8)
-    
 end
 
 function love.update(dt)

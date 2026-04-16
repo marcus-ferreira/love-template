@@ -4,22 +4,32 @@
 ]]
 
 
+---@class timer
+timer = {}
+
+---@enum timerState
+local timerState = {
+    NOT_STARTED = 1,
+    ACTIVE = 2,
+    FINISHED = 3
+}
+
+
 ---@class Timer
+---@field private time number The time of the timer in seconds.
+---@field private currentState number The current state of the timer.
 Timer = {}
 Timer.__index = Timer
 
 ---Creates a new Timer object.
 ---@return Timer # A new Timer object.
-function Timer.new()
-    ---@class Timer
-    local self = setmetatable({}, Timer)
-    self.time = 0
-    self.states = {
-        NOT_STARTED = 1,
-        ACTIVE = 2,
-        FINISHED = 3
+function timer.newTimer()
+    ---@type Timer
+    local self = {
+        time = 0,
+        currentState = timerState.NOT_STARTED
     }
-    self.currentState = self.states.NOT_STARTED
+    setmetatable(self, Timer)
     return self
 end
 
@@ -34,39 +44,45 @@ function Timer:update(dt)
     end
 end
 
+---Gets the time of the timer.
+---@return number # The time of the timer in seconds.
+function Timer:getTime()
+    return self.time
+end
+
 ---Starts the timer with a specific time.
 ---@param time number # The time of the timer in seconds.
 function Timer:start(time)
     self.time = time
-    self.currentState = self.states.ACTIVE
+    self.currentState = timerState.ACTIVE
 end
-
 
 ---Resets the timer.
 function Timer:reset()
     self.time = 0
-    self.currentState = self.states.NOT_STARTED
+    self.currentState = timerState.NOT_STARTED
 end
 
 ---Finishes the timer.
 function Timer:finish()
-    self.currentState = self.states.FINISHED
+    self.time = 0
+    self.currentState = timerState.FINISHED
 end
 
 ---Checks if the timer was not started.
 ---@return boolean # True if the timer was not started, false otherwise.
 function Timer:wasNotStarted()
-    return self.currentState == self.states.NOT_STARTED
+    return self.currentState == timerState.NOT_STARTED
 end
 
 ---Checks if the timer is active.
 ---@return boolean # True if the timer is active, false otherwise.
 function Timer:isActive()
-    return self.currentState == self.states.ACTIVE
+    return self.currentState == timerState.ACTIVE
 end
 
 ---Checks if the timer is finished.
 ---@return boolean # True if the timer is finished, false otherwise.
 function Timer:isFinished()
-    return self.currentState == self.states.FINISHED
+    return self.currentState == timerState.FINISHED
 end

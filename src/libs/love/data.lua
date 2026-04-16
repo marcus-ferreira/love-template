@@ -4,10 +4,14 @@
 ]]
 
 
+---@class data
+data = {}
+
+
 --- Saves game data to a file.
 ---@param fileName string # The name of the file to save the data to.
 ---@param gameData table # The game data to save.
-function love.filesystem.saveData(fileName, gameData)
+function data.saveData(fileName, gameData)
 	local serializedString = "{"
 	for k, v in pairs(gameData) do
 		serializedString = serializedString .. k .. "=" .. v .. ","
@@ -20,7 +24,7 @@ end
 --- Loads game data from a file.
 ---@param fileName string # The name of the file to load the data from.
 ---@return table | nil # The loaded game data or nil if the file could not be read.
-function love.filesystem.loadData(fileName)
+function data.loadData(fileName)
 	local fileString = love.filesystem.read(fileName)
 	if fileString == nil then return end
 

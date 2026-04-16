@@ -4,11 +4,21 @@
 ]]
 
 
----@class Animation
-Animation = {}
-Animation.__index = Animation
+---@class animation
+animation = {}
 
+---@enum animationState
+local animationState = {
+	PLAYING = 1,
+	STOPPED = 2
+}
+
+
+---A grid of quads for the animation frames.
 ---@class Grid
+---@field private tileWidth number The width of each tile.
+---@field private tileHeight number The height of each tile.
+---@field private __index? number The index of the grid (for iterating).
 Grid = {}
 Grid.__index = Grid
 
@@ -22,61 +32,83 @@ Grid.__index = Grid
 ---@param offsetX? number # The margin in between tiles columns. Default = 0.
 ---@param offsetY? number # The margin in between tiles rows. Default = 0.
 ---@return Grid grid # The Grid object.
-function Grid.new(tileWidth, tileHeight, columns, rows, left, top, offsetX, offsetY)
-	left = left or 0
-	top = top or 0
-	offsetX = offsetX or 0
-	offsetY = offsetY or 0
+function animation.newGrid(tileWidth, tileHeight, columns, rows, left, top, offsetX, offsetY)
+	local _left = left or 0
+	local _top = top or 0
+	local _offsetX = offsetX or 0
+	local _offsetY = offsetY or 0
 
-	---@class Grid
-	local grid = {}
-	grid.tileWidth = tileWidth
-	grid.tileHeight = tileHeight
+	---@type Grid
+	local self = {
+		tileWidth = tileWidth,
+		tileHeight = tileHeight,
+		columns = columns,
+		rows = rows,
+		left = _left,
+		top = _top,
+		offsetX = _offsetX,
+		offsetY = _offsetY
+	}
+	setmetatable(self, Grid)
 	for row = 0, rows - 1 do
 		for col = 0, columns - 1 do
-			local x = left + col * (tileWidth + offsetX)
-			local y = top + row * (tileHeight + offsetY)
+			local x = _left + col * (tileWidth + _offsetX)
+			local y = _top + row * (tileHeight + _offsetY)
 			local quad = love.graphics.newQuad(
 				x, y, tileWidth, tileHeight, tileWidth * columns, tileHeight * rows
 			)
-			table.insert(grid, quad)
+			table.insert(self, quad)
 		end
 	end
-	return grid
+	return self
 end
+
+---Gets the quad at the specified index in the grid.
+---@return love.Quad # The quad at the specified index.
+function Grid:getQuad(index)
+	return self[index]
+end
+
+---A Animation class for handling sprite animations.
+---@class Animation
+---@field private image love.Image The image to be used.
+---@field private grid Grid The grid of quads created by newGrid.
+---@field private frames number[] A table of the numbers of the quads in order.
+---@field private currentFrameIndex number The index of the current frame in the frames table.
+---@field private originX? number The X origin for drawing.
+---@field private originY? number The Y origin for drawing.
+---@field private interval? number The interval between frame quads, in seconds.
+---@field private loop? boolean True if the animation should be looped or false if contrary.
+---@field private timer number The timer used to track the time between frame changes.
+---@field private currentState animationState The current state of the animation (PLAYING or STOPPED).
+---@field private __index? number The index of the animation (for iterating).
+Animation = {}
+Animation.__index = Animation
 
 ---Creates a new Animation object.
 ---@param image love.Image # The image to be used.
 ---@param grid Grid # The grid of quads created by newGrid.
----@param frames table # A table of the numbers of the quads in order.
+---@param frames number[] # A table of the numbers of the quads in order.
 ---@param originX? number # The X origin for drawing. Default = 0.
 ---@param originY? number # The Y origin for drawing. Default = 0.
 ---@param interval? number # The interval between frame quads, in seconds. Default = 1.
 ---@param loop? boolean # True if the animation should be looped or false if contrary. Default = true.
 ---@return Animation animation # The new Animation object.
-function Animation.new(image, grid, frames, originX, originY, interval, loop)
-	originX = originX or 0
-	originY = originY or 0
-	interval = interval or 1
-	loop = loop == nil and true or loop
-
-
-	---@class Animation
-	local self = setmetatable({}, Animation)
-	self.image = image
-	self.grid = grid
-	self.frames = frames
-	self.currentFrameIndex = 1
-	self.originX = originX
-	self.originY = originY
-	self.interval = interval
-	self.loop = loop
-	self.timer = 0
-	self.states = {
-		PLAYING = 1,
-		STOPPED = 2
+function animation.newAnimation(image, grid, frames, originX, originY, interval, loop)
+	---@type Animation
+	local self = {
+		image = image,
+		grid = grid,
+		frames = frames,
+		currentFrameIndex = 1,
+		originX = originX or 0,
+		originY = originY or 0,
+		interval = interval or 1,
+		loop = loop == nil and true or loop,
+		timer = 0,
+		currentState = animationState.PLAYING
 	}
-	self.currentState = self.states.PLAYING
+	setmetatable(self, Animation)
 	return self
 end
 
@@ -114,25 +146,21 @@ end
 ---@param sx? number # The scaleX of the animation.
 ---@param sy? number # The scaleY of the animation.
 function Animation:draw(x, y, rotation, sx, sy)
-	rotation = rotation or 0
-	sx = sx or 1
-	sy = sy or 1
-
 	love.graphics.draw(
-		self.image,                  -- image
-		self.grid[self:getCurrentFrame()], -- quad
-		x,                           -- x
-		y,                           -- y
-		rotation,                    -- rotation
-		sx,                          -- scaleX
-		sy,                          -- scaleY
-		self.originX,                -- originX
-		self.originY                 -- originY
+		self.image,                          -- image
+		self.grid:getQuad(self:getCurrentFrame()), -- quad
+		x,                                   -- x
+		y,                                   -- y
+		rotation or 0,                       -- rotation
+		sx or 1,                             -- scaleX
+		sy or 1,                             -- scaleY
+		self.originX,                        -- originX
+		self.originY                         -- originY
 	)
 end
 
 ---Gets the current frame (quad) of the animation (not the index).
----@return love.Quad # The frame of the animation.
+---@return number # The frame of the animation.
 function Animation:getCurrentFrame()
 	return self.frames[self.currentFrameIndex]
 end
@@ -153,18 +181,18 @@ end
 ---Checks if the animation is currently playing.
 ---@return boolean # True if the animation is playing.
 function Animation:isPlaying()
-	return self.currentState == self.states.PLAYING
+	return self.currentState == animationState.PLAYING
 end
 
 ---Starts playing the animation.
 function Animation:play()
 	self.currentFrameIndex = 1
-	self.currentState = self.states.PLAYING
+	self.currentState = animationState.PLAYING
 end
-	
+
 ---Resumes the animation.
 function Animation:resume()
-	self.currentState = self.states.PLAYING
+	self.currentState = animationState.PLAYING
 end
 
 ---Rewinds the animation to the first frame.
@@ -180,5 +208,5 @@ end
 
 ---Stops the animation.
 function Animation:stop()
-	self.currentState = self.states.STOPPED
+	self.currentState = animationState.STOPPED
 end
