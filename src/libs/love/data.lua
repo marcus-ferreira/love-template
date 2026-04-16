@@ -4,11 +4,13 @@
 ]]
 
 
+--- Library
 ---@class data
-data = {}
+local data = {}
 
 
---- Saves game data to a file.
+--- Methods
+---Saves game data to a file.
 ---@param fileName string # The name of the file to save the data to.
 ---@param gameData table # The game data to save.
 function data.saveData(fileName, gameData)
@@ -21,7 +23,7 @@ function data.saveData(fileName, gameData)
 	love.filesystem.write(fileName, serializedString)
 end
 
---- Loads game data from a file.
+---Loads game data from a file.
 ---@param fileName string # The name of the file to load the data from.
 ---@return table | nil # The loaded game data or nil if the file could not be read.
 function data.loadData(fileName)
@@ -34,3 +36,5 @@ function data.loadData(fileName)
 
 	return deserializedTable
 end
+
+return data

@@ -4,16 +4,21 @@
 ]]
 
 
+--- Library
 ---@class vector
-vector = {}
+local vector = {}
 
 
+--- Classes
 ---@class Vector2
 ---@field private x number The X component of the vector.
 ---@field private y number The Y component of the vector.
-Vector2 = {}
+---@field private __index? table The index of the vector (for iterating).
+local Vector2 = {}
 Vector2.__index = Vector2
 
+
+--- Methods
 ---Creates a new Vector2 object.
 ---@param x? number # The X component of the vector.
 ---@param y? number # The Y component of the vector.
@@ -97,9 +102,18 @@ function Vector2:normalize()
 	return vector.newVector2(0, 0)
 end
 
----Calculates the product of the vector with another vector.
+---Calculates the dot product of the vector with another vector.
 ---@param v Vector2 # The vector to calculate the dot product with.
 ---@return number # The dot product of the two vectors.
 function Vector2:dot(v)
-	return self.x * v.x + self.y * v.y
+	return self.x * v:getX() + self.y * v:getY()
 end
+
+--- Calculates the cross product of the vector with another vector.
+---@param v Vector2 # The vector to calculate the cross product with.
+---@return number # The cross product of the two vectors.
+function Vector2:cross(v)
+	return self.x * v:getY() - self.y * v:getX()
+end
+
+return vector

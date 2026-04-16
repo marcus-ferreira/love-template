@@ -4,17 +4,27 @@
 ]]
 
 
+--- Library
 ---@class stateMachine
-stateMachine = {}
+local stateMachine = {}
 
 
+--- Classes
 ---@class StateMachine
 ---@field private states State<string, State> The states of the state machine.
 ---@field private currentState State The current state of the state machine.
----@field private __index? number The index of the state machine (for iterating).
-StateMachine = {}
+---@field private __index? table The index of the state machine (for iterating).
+local StateMachine = {}
 StateMachine.__index = StateMachine
 
+---@class State
+---@field private name string The name of the state.
+---@field private __index? table The index of the state (for iterating).
+local State = {}
+State.__index = State
+
+
+--- Methods
 ---Creates a new StateMachine object.
 ---@return StateMachine # A new StateMachine object.
 function stateMachine.newStateMachine()
@@ -71,12 +81,6 @@ function StateMachine:draw()
 	end
 end
 
----@class State
----@field private name string The name of the state.
----@field private __index? number The index of the state (for iterating).
-State = {}
-State.__index = State
-
 ---Creates a new State object.
 ---@param name string # The name of the state.
 ---@param enter? function # The function to be called when the state is entered.
@@ -124,3 +128,5 @@ end
 function State:exit()
 	self:exit()
 end
+
+return stateMachine

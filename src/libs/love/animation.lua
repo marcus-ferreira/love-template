@@ -4,9 +4,12 @@
 ]]
 
 
+--- Library
 ---@class animation
-animation = {}
+local animation = {}
 
+
+--- Enums
 ---@enum animationState
 local animationState = {
 	PLAYING = 1,
@@ -14,14 +17,31 @@ local animationState = {
 }
 
 
----A grid of quads for the animation frames.
+--- Classes
 ---@class Grid
 ---@field private tileWidth number The width of each tile.
 ---@field private tileHeight number The height of each tile.
----@field private __index? number The index of the grid (for iterating).
-Grid = {}
+---@field private __index? table The index of the grid (for iterating).
+local Grid = {}
 Grid.__index = Grid
 
+---@class Animation
+---@field private image love.Image The image to be used.
+---@field private grid Grid The grid of quads created by newGrid.
+---@field private frames number[] A table of the numbers of the quads in order.
+---@field private currentFrameIndex number The index of the current frame in the frames table.
+---@field private originX? number The X origin for drawing.
+---@field private originY? number The Y origin for drawing.
+---@field private interval? number The interval between frame quads, in seconds.
+---@field private loop? boolean True if the animation should be looped or false if contrary.
+---@field private timer number The timer used to track the time between frame changes.
+---@field private currentState animationState The current state of the animation (PLAYING or STOPPED).
+---@field private __index? table The index of the animation (for iterating).
+local Animation = {}
+Animation.__index = Animation
+
+
+--- Methods
 ---Creates a grid of quads based on the given parameters.
 ---@param tileWidth number # The width of each tile.
 ---@param tileHeight number # The height of each tile.
@@ -69,21 +89,6 @@ function Grid:getQuad(index)
 	return self[index]
 end
 
----A Animation class for handling sprite animations.
----@class Animation
----@field private image love.Image The image to be used.
----@field private grid Grid The grid of quads created by newGrid.
----@field private frames number[] A table of the numbers of the quads in order.
----@field private currentFrameIndex number The index of the current frame in the frames table.
----@field private originX? number The X origin for drawing.
----@field private originY? number The Y origin for drawing.
----@field private interval? number The interval between frame quads, in seconds.
----@field private loop? boolean True if the animation should be looped or false if contrary.
----@field private timer number The timer used to track the time between frame changes.
----@field private currentState animationState The current state of the animation (PLAYING or STOPPED).
----@field private __index? number The index of the animation (for iterating).
-Animation = {}
-Animation.__index = Animation
 
 ---Creates a new Animation object.
 ---@param image love.Image # The image to be used.
@@ -210,3 +215,5 @@ end
 function Animation:stop()
 	self.currentState = animationState.STOPPED
 end
+
+return animation

@@ -4,9 +4,12 @@
 ]]
 
 
+--- Library
 ---@class timer
-timer = {}
+local timer = {}
 
+
+--- Enums
 ---@enum timerState
 local timerState = {
     NOT_STARTED = 1,
@@ -15,12 +18,16 @@ local timerState = {
 }
 
 
+--- Classes
 ---@class Timer
 ---@field private time number The time of the timer in seconds.
 ---@field private currentState number The current state of the timer.
-Timer = {}
+---@field private __index? table The index of the timer (for iterating).
+local Timer = {}
 Timer.__index = Timer
 
+
+--- Methods
 ---Creates a new Timer object.
 ---@return Timer # A new Timer object.
 function timer.newTimer()
@@ -86,3 +93,5 @@ end
 function Timer:isFinished()
     return self.currentState == timerState.FINISHED
 end
+
+return timer

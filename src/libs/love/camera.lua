@@ -4,20 +4,24 @@
 ]]
 
 
+--- Library
 ---@class camera
-camera = {}
+local camera = {}
 
 
+--- Classes
 ---@class Camera
 ---@field private x number The X position of the camera.
 ---@field private y number The Y position of the camera.
 ---@field private scale number The scale of the camera.
 ---@field private rotation number The rotation of the camera.
 ---@field private followSpeed number The speed at which the camera follows a target.
----@field private __index? number The index of the camera (for iterating).
-Camera = {}
+---@field private __index? table The index of the camera (for iterating).
+local Camera = {}
 Camera.__index = Camera
 
+
+--- Methods
 ---Creates a new Camera object.
 ---@param x number # X position of the camera.
 ---@param y number # Y position of the camera.
@@ -108,3 +112,5 @@ end
 function Camera:unsetCamera()
 	love.graphics.pop()
 end
+
+return camera

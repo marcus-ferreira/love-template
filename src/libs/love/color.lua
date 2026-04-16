@@ -4,10 +4,12 @@
 ]]
 
 
+--- Library
 ---@class color
-color = {}
+local color = {}
 
 
+--- Methods
 ---Converts a hex (given without '#') value to RGB. (output range: 0 - 1)
 ---@param hex string # The hex color value (e.g. "ff0000" for red or "f00" for red).
 ---@return number? R # The red component of the color (0 - 1).
@@ -27,3 +29,5 @@ function color.hexToRGB(hex)
 		error("Invalid hexadecimal format.")
 	end
 end
+
+return color

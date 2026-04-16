@@ -4,18 +4,30 @@
 ]]
 
 
+--- Library
 ---@class physics
-physics = {}
+local physics = {}
 
 
+--- Classes
 ---@class RectangleCollider
 ---@field private body love.Body The physics body of the collider.
 ---@field private shape love.PolygonShape The shape of the collider.
 ---@field private fixture love.Fixture The fixture of the collider.
----@field private __index? number The index of the rectangle collider (for iterating).
-RectangleCollider = {}
+---@field private __index? table The index of the rectangle collider (for iterating).
+local RectangleCollider = {}
 RectangleCollider.__index = RectangleCollider
 
+---@class CircleCollider
+---@field private body love.Body The physics body of the collider.
+---@field private shape love.CircleShape The shape of the collider.
+---@field private fixture love.Fixture The fixture of the collider.
+---@field private __index? table The index of the circle collider (for iterating).
+local CircleCollider = {}
+CircleCollider.__index = CircleCollider
+
+
+--- Methods
 ---Creates a new RectangleCollider object.
 ---@param world love.World # The physics world to which the collider belongs.
 ---@param x number # The X coordinate of the collider.
@@ -74,14 +86,6 @@ function RectangleCollider:getWidth()
 	return width
 end
 
----@class CircleCollider
----@field private body love.Body The physics body of the collider.
----@field private shape love.CircleShape The shape of the collider.
----@field private fixture love.Fixture The fixture of the collider.
----@field private __index? number The index of the circle collider (for iterating).
-CircleCollider = {}
-CircleCollider.__index = CircleCollider
-
 ---Creates a new CircleCollider object.
 ---@param world love.World # The physics world to which the collider belongs.
 ---@param x number # The X coordinate of the collider.
@@ -113,3 +117,5 @@ function CircleCollider:setupCollider()
 	self.body:setFixedRotation(true)
 	self.fixture:setFriction(0)
 end
+
+return physics
