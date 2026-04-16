@@ -1,11 +1,8 @@
 --[[
 	Author: Marcus Ferreira
-	17/10/2024 - 0.2.0v - Initial
+	Description: A collision library for LOVE.
 ]]
 
-
----@class collision
-collision = {}
 
 ---@class Rectangle
 Rectangle = {}
@@ -15,14 +12,13 @@ Rectangle.__index = Rectangle
 Circle = {}
 Circle.__index = Circle
 
-
----Creates a new Rectangle.
----@param x number
----@param y number
----@param width number
----@param height number
----@return Rectangle
-function collision.newRectangle(x, y, width, height)
+---Creates a new Rectangle object.
+---@param x number # The X position of the rectangle.
+---@param y number # The Y position of the rectangle.
+---@param width number # The width of the rectangle.
+---@param height number # The height of the rectangle.
+---@return Rectangle # A new Rectangle object.
+function Rectangle.new(x, y, width, height)
 	---@class Rectangle
 	local self = setmetatable({}, Rectangle)
 	self.x = x
@@ -32,25 +28,11 @@ function collision.newRectangle(x, y, width, height)
 	return self
 end
 
----Creates a new Circle.
----@param x number
----@param y number
----@param radius number
----@return Circle
-function collision.newCircle(x, y, radius)
-	---@class Circle
-	local self = setmetatable({}, Circle)
-	self.x = x
-	self.y = y
-	self.radius = radius
-	return self
-end
-
----Checks if the Rectangle is colliding with other object.
----@param object Rectangle | Circle
----@param x? number
----@param y? number
----@return boolean
+---Checks if the rectangle is colliding with another object.
+---@param object Rectangle | Circle # The object to check collision with.
+---@param x? number # The X position of the rectangle.
+---@param y? number # The Y position of the rectangle.
+---@return boolean # True if the rectangle is colliding with the object, false otherwise.
 function Rectangle:isColliding(object, x, y)
 	local class = getmetatable(object)
 	assert(class == Rectangle or class == Circle, "Object must be a Rectangle or Circle.")
@@ -70,11 +52,30 @@ function Rectangle:isColliding(object, x, y)
 	return false
 end
 
----Checks if the Circle is colliding with other object.
----@param object Rectangle | Circle
----@param x? number
----@param y? number
----@return boolean
+---Draws the rectangle.
+function Rectangle:draw()
+	love.graphics.rectangle("line", self.x, self.y, self.width, self.height)
+end
+
+--- Creates a new Circle object.
+---@param x number # The X position of the circle.
+---@param y number # The Y position of the circle.
+---@param radius number # The radius of the circle.
+---@return Circle # A new Circle object.
+function Circle.new(x, y, radius)
+	---@class Circle
+	local self = setmetatable({}, Circle)
+	self.x = x
+	self.y = y
+	self.radius = radius
+	return self
+end
+
+---Checks if the circle is colliding with another object.
+---@param object Rectangle | Circle # The object to check collision with.
+---@param x? number # The X position of the circle.
+---@param y? number # The Y position of the circle.
+---@return boolean # True if the circle is colliding with the object, false otherwise.
 function Circle:isColliding(object, x, y)
 	local class = getmetatable(object)
 	assert(class == Rectangle or class == Circle, "Object must be a Rectangle or Circle.")
@@ -91,12 +92,7 @@ function Circle:isColliding(object, x, y)
 	return false
 end
 
----Draws the Rectangle.
-function Rectangle:draw()
-	love.graphics.rectangle("line", self.x, self.y, self.width, self.height)
-end
-
----Draws the Circle.
+---Draws the circle.
 function Circle:draw()
 	love.graphics.circle("line", self.x, self.y, self.radius)
 end

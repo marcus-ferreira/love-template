@@ -1,16 +1,17 @@
 --[[
-	Author: Marcus
-	18/10/2024 - 0.1.3v - Initial
+	Author: Marcus Ferreira
+	Description: A color library for LOVE.
 ]]
+
 
 ---@class color
 color = {}
 
 ---Converts a hex (given without '#') value to RGB. (output range: 0 - 1)
----@param hex string
----@return number? R
----@return number? G
----@return number? B
+---@param hex string # The hex color value (e.g. "ff0000" for red or "f00" for red).
+---@return number? R # The red component of the color (0 - 1).
+---@return number? G # The green component of the color (0 - 1).
+---@return number? B # The blue component of the color (0 - 1).
 function color.hexToRGB(hex)
 	hex = hex:gsub("#", "")
 	if #hex == 3 then
