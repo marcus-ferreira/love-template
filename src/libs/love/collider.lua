@@ -4,8 +4,8 @@
 ]]
 
 
----@class collision
-collision = {}
+---@class collider
+collider = {}
 
 
 ---@class Rectangle
@@ -23,7 +23,7 @@ Rectangle.__index = Rectangle
 ---@param width number # The width of the rectangle.
 ---@param height number # The height of the rectangle.
 ---@return Rectangle # A new Rectangle object.
-function collision.newRectangle(x, y, width, height)
+function collider.newRectangle(x, y, width, height)
 	---@type Rectangle
 	local self = {
 		x = x,
@@ -94,7 +94,7 @@ Circle.__index = Circle
 ---@param y number # The Y position of the circle.
 ---@param radius number # The radius of the circle.
 ---@return Circle # A new Circle object.
-function collision.newCircle(x, y, radius)
+function collider.newCircle(x, y, radius)
 	---@type Circle
 	local self = {
 		x = x,
