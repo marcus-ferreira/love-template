@@ -46,6 +46,30 @@ function Camera:moveTo(targetX, targetY, dt)
 	self.y = self.y + (targetY - self.y) * self.followSpeed * dt
 end
 
+--- Pins the camera to an entity.
+---@param entity table # The entity to pin the camera to. Must have getPosition and getDimensions methods.
+---@param align string # The alignment of the camera to the entity. Can be "center" or "topleft".
+---@param dt number # The delta time.
+function Camera:pinTo(entity, align, dt)
+	if not entity.getPosition then
+		error("Entity must have a getPosition method.")
+	end
+	if not entity.getDimensions then
+		error("Entity must have a getDimensions method.")
+	end
+
+	local entityX, entityY = entity:getPosition()
+	local entityWidth, entityHeight = entity:getDimensions()
+	if align == "center" then
+		entityX = entityX - love.graphics.getWidth() / 2 + entityWidth / 2
+		entityY = entityY - love.graphics.getHeight() / 2 + entityHeight / 2
+	elseif align == "topleft" then
+		entityX = entityX - love.graphics.getWidth() / 2
+		entityY = entityY - love.graphics.getHeight() / 2
+	end
+	self:moveTo(entityX, entityY, dt)
+end
+
 ---Rotates the camera.
 ---@param dr number # The amount to rotate the camera by.
 function Camera:rotate(dr)
