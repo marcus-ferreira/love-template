@@ -21,6 +21,7 @@ local animationState = {
 ---@class Grid
 ---@field private tileWidth number The width of each tile.
 ---@field private tileHeight number The height of each tile.
+---@field private quads love.Quad[] A table of the quads created by newGrid.
 ---@field private __index? table The index of the grid (for iterating).
 local Grid = {}
 Grid.__index = Grid
@@ -43,16 +44,17 @@ Animation.__index = Animation
 
 --- Methods
 ---Creates a grid of quads based on the given parameters.
----@param tileWidth number # The width of each tile.
----@param tileHeight number # The height of each tile.
----@param columns number # The number of the tiles in a row.
----@param rows number # The number of the tiles in a column.
----@param left? number # Where to start to draw from left. Default = 0.
----@param top? number # Where to start to draw from top. Default = 0.
----@param offsetX? number # The margin in between tiles columns. Default = 0.
----@param offsetY? number # The margin in between tiles rows. Default = 0.
----@return Grid grid # The Grid object.
-function animation.newGrid(tileWidth, tileHeight, columns, rows, left, top, offsetX, offsetY)
+---@param image love.Image The image to be used.
+---@param tileWidth number The width of each tile.
+---@param tileHeight number The height of each tile.
+---@param columns number The number of the tiles in a row.
+---@param rows number The number of the tiles in a column.
+---@param left? number Where to start to draw from left. Default = 0.
+---@param top? number Where to start to draw from top. Default = 0.
+---@param offsetX? number The margin in between tiles columns. Default = 0.
+---@param offsetY? number The margin in between tiles rows. Default = 0.
+---@return Grid grid The Grid object.
+function animation.newGrid(image, tileWidth, tileHeight, columns, rows, left, top, offsetX, offsetY)
 	local _left = left or 0
 	local _top = top or 0
 	local _offsetX = offsetX or 0
@@ -62,54 +64,46 @@ function animation.newGrid(tileWidth, tileHeight, columns, rows, left, top, offs
 	local self = {
 		tileWidth = tileWidth,
 		tileHeight = tileHeight,
-		columns = columns,
-		rows = rows,
-		left = _left,
-		top = _top,
-		offsetX = _offsetX,
-		offsetY = _offsetY
+		quads = {}
 	}
 	setmetatable(self, Grid)
-	for row = 0, rows - 1 do
-		for col = 0, columns - 1 do
-			local x = _left + col * (tileWidth + _offsetX)
-			local y = _top + row * (tileHeight + _offsetY)
+	for y = 0, rows - 1 do
+		for x = 0, columns - 1 do
 			local quad = love.graphics.newQuad(
-				x, y, tileWidth, tileHeight, tileWidth * columns, tileHeight * rows
+				_left + x * (tileWidth + _offsetX), -- x
+				_top + y * (tileHeight + _offsetY), -- y
+				tileWidth,              -- width
+				tileHeight,             -- height
+				image:getDimensions()   -- sw, sh
 			)
-			table.insert(self, quad)
+			self:addQuad(quad)
 		end
 	end
 	return self
 end
 
----Gets the quad at the specified index in the grid.
----@return love.Quad # The quad at the specified index.
-function Grid:getQuad(index)
-	return self[index]
-end
-
-
 ---Creates a new Animation object.
----@param image love.Image # The image to be used.
----@param grid Grid # The grid of quads created by newGrid.
----@param frames number[] # A table of the numbers of the quads in order.
----@param originX? number # The X origin for drawing. Default = 0.
----@param originY? number # The Y origin for drawing. Default = 0.
----@param interval? number # The interval between frame quads, in seconds. Default = 1.
----@param loop? boolean # True if the animation should be looped or false if contrary. Default = true.
----@return Animation animation # The new Animation object.
+---@param image love.Image The image to be used.
+---@param grid Grid The grid of quads created by newGrid.
+---@param frames number[] A table of the numbers of the quads in order.
+---@param originX? number The X origin for drawing. Default = 0.
+---@param originY? number The Y origin for drawing. Default = 0.
+---@param interval? number The interval between frame quads, in seconds. Default = 1.
+---@param loop? boolean True if the animation should be looped or false if contrary. Default = false.
+---@return Animation animation The new Animation object.
 function animation.newAnimation(image, grid, frames, originX, originY, interval, loop)
+	local tileWidth, tileHeight = grid:getTileSize()
+
 	---@type Animation
 	local self = {
 		image = image,
 		grid = grid,
 		frames = frames,
 		currentFrameIndex = 1,
-		originX = originX or 0,
-		originY = originY or 0,
+		originX = originX or tileWidth / 2,
+		originY = originY or tileHeight / 2,
 		interval = interval or 1,
-		loop = loop == nil and true or loop,
+		loop = loop or false,
 		timer = 0,
 		currentState = animationState.PLAYING
 	}
@@ -117,8 +111,27 @@ function animation.newAnimation(image, grid, frames, originX, originY, interval,
 	return self
 end
 
+---Adds a quad to the grid.
+---@param quad love.Quad The quad to be added to the grid.
+function Grid:addQuad(quad)
+	table.insert(self.quads, quad)
+end
+
+---Gets the tile size of the grid.
+---@return number tileWidth The width of a tile of the grid.
+---@return number tileHeight The height of a tile of the grid.
+function Grid:getTileSize()
+	return self.tileWidth, self.tileHeight
+end
+
+---Gets the quad at the specified index in the grid.
+---@return love.Quad quad The quad at the specified index.
+function Grid:getQuad(index)
+	return self.quads[index]
+end
+
 ---Updates the animation. Should be called in love.update.
----@param dt number
+---@param dt number The delta time.
 function Animation:update(dt)
 	-- Don't update if there's only 1 frame
 	if #self.frames == 1 then return end
@@ -145,15 +158,15 @@ function Animation:update(dt)
 end
 
 ---Draws the current frame of the animation. Should be called in love.draw.
----@param x number # The X position of the animation.
----@param y number # The Y position of the animation.
----@param rotation? number # The rotation value of the animation.
----@param sx? number # The scaleX of the animation.
----@param sy? number # The scaleY of the animation.
+---@param x number The X position of the animation.
+---@param y number The Y position of the animation.
+---@param rotation? number The rotation value of the animation.
+---@param sx? number The scaleX of the animation.
+---@param sy? number The scaleY of the animation.
 function Animation:draw(x, y, rotation, sx, sy)
 	love.graphics.draw(
 		self.image,                          -- image
-		self.grid:getQuad(self:getCurrentFrame()), -- quad
+		self.grid:getQuad(self.currentFrameIndex), -- quad
 		x,                                   -- x
 		y,                                   -- y
 		rotation or 0,                       -- rotation
@@ -164,27 +177,28 @@ function Animation:draw(x, y, rotation, sx, sy)
 	)
 end
 
----Gets the current frame (quad) of the animation (not the index).
----@return number # The frame of the animation.
-function Animation:getCurrentFrame()
-	return self.frames[self.currentFrameIndex]
+---Gets the origin point of the animation.
+---@return number originX The X position of the origin point of the animation.
+---@return number originY The Y position of the origin point of the animation.
+function Animation:getOriginPoint()
+	return self.originX, self.originY
 end
 
 ---Goes to the specified frame index of the animation.
----@param frameIndex number # The index of the frame to go.
+---@param frameIndex number The index of the frame to go.
 function Animation:goToFrame(frameIndex)
 	self.currentFrameIndex = frameIndex
 	self.timer = 0
 end
 
 ---Checks if the animation has ended.
----@return boolean # True if the last frame of the animation is playing.
+---@return boolean isEnded True if the last frame of the animation is playing.
 function Animation:isEnded()
 	return self.currentFrameIndex == #self.frames
 end
 
 ---Checks if the animation is currently playing.
----@return boolean # True if the animation is playing.
+---@return boolean isPlaying True if the animation is playing.
 function Animation:isPlaying()
 	return self.currentState == animationState.PLAYING
 end
@@ -202,13 +216,47 @@ end
 
 ---Rewinds the animation to the first frame.
 function Animation:rewind()
-	self:goToFrame(1)
+	self.currentFrameIndex = 1
 end
 
 ---Sets whether the animation should loop or not.
----@param loop boolean # True if the animation should loop or false if contrary.
+---@param loop boolean True if the animation should loop or false if contrary.
 function Animation:setLoop(loop)
 	self.loop = loop
+end
+
+---Sets the origin point of the animation.
+---@param point "top-left" | "top-middle" | "top-right" | "middle-left" | "center" | "middle-right" | "bottom-left" | "bottom-middle" | "bottom-right" The new origin point of the animation.
+function Animation:setOriginPoint(point)
+	local tileWidth, tileHeight = self.grid:getTileSize()
+	if point == "top-left" then
+		self.originX = 0
+		self.originY = 0
+	elseif point == "top-middle" then
+		self.originX = tileWidth / 2
+		self.originY = 0
+	elseif point == "top-right" then
+		self.originX = tileWidth
+		self.originY = 0
+	elseif point == "middle-left" then
+		self.originX = 0
+		self.originY = tileHeight / 2
+	elseif point == "center" then
+		self.originX = tileWidth / 2
+		self.originY = tileHeight / 2
+	elseif point == "middle-right" then
+		self.originX = tileWidth
+		self.originY = tileHeight / 2
+	elseif point == "bottom-left" then
+		self.originX = 0
+		self.originY = tileHeight
+	elseif point == "bottom-middle" then
+		self.originX = tileWidth / 2
+		self.originY = tileHeight
+	elseif point == "bottom-right" then
+		self.originX = tileWidth
+		self.originY = tileHeight
+	end
 end
 
 ---Stops the animation.
