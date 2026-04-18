@@ -18,11 +18,13 @@ local character = {}
 ---@class Character
 ---@field private x number The X coordinate of the character.
 ---@field private y number The Y coordinate of the character.
+---@field private vx number The X component of the linear velocity of the character.
+---@field private vy number The Y component of the linear velocity of the character.
 ---@field private states State[] The states of the character.
 ---@field private currentState State | nil The current state of the character.
 ---@field private animations Animation[] The animations of the character.
 ---@field private currentAnimation Animation | nil The current animation of the character.
----@field private colliders RectangleCollider[] | CircleCollider[] | nil The collider of the character.
+---@field private collider RectangleCollider | CircleCollider | nil The collider of the character.
 ---@field private __index? table The index of the character (for iterating).
 local Character = {}
 Character.__index = Character
@@ -44,7 +46,7 @@ function character.newCharacter(x, y)
         currentState = nil,
         animations = {},
         currentAnimation = nil,
-        colliders = {}
+        collider = nil
     }
     setmetatable(self, Character)
     return self
@@ -72,9 +74,10 @@ end
 ---@param x number The X coordinate of the collider.
 ---@param y number The Y coordinate of the collider.
 ---@param radius number The radius of the collider.
-function Character:addCircleCollider(world, x, y, radius)
-    local collider = physics.newCircleCollider(world, x, y, radius, "dynamic")
-    table.insert(self.colliders, collider)
+---@param type? love.BodyType The type of the collider. Default = "dynamic".
+function Character:addCircleCollider(world, x, y, radius, type)
+    local _type = type or "dynamic"
+    self.collider = physics.newCircleCollider(world, x, y, radius, _type)
 end
 
 ---Adds a rectangle collider to the character.
@@ -82,9 +85,10 @@ end
 ---@param y number The Y coordinate of the collider.
 ---@param width number The width of the collider.
 ---@param height number The height of the collider.
-function Character:addRectangleCollider(world, x, y, width, height)
-    local collider = physics.newRectangleCollider(world, x, y, width, height, "dynamic")
-    table.insert(self.colliders, collider)
+---@param type? love.BodyType The type of the collider. Default = "dynamic".
+function Character:addRectangleCollider(world, x, y, width, height, type)
+    local _type = type or "dynamic"
+    self.collider = physics.newRectangleCollider(world, x, y, width, height, _type)
 end
 
 ---Adds a new state to the character.
@@ -124,17 +128,22 @@ function Character:draw()
 end
 
 ---Draws the colliders of the character.
-function Character:drawColliders()
-    assert(#self.colliders > 0, "Character has no collider.")
-    for _, collider in ipairs(self.colliders) do
-        collider:draw()
-    end
+function Character:drawCollider()
+    assert(self.collider, "Character has no collider.")
+    self.collider:draw()
 end
 
 ---Gets the current animation of the character.
 ---@return Animation currentAnimation The current animation of the character.
 function Character:getCurrentAnimation()
     return self.currentAnimation
+end
+
+---Gets the linear velocity of the collider.
+---@return number x The X component of the linear velocity vector.
+---@return number y The Y component of the linear velocity vector.
+function Character:getLinearVelocity()
+    return self.collider:getLinearVelocity()
 end
 
 ---Gets the position of the character.
@@ -144,19 +153,24 @@ function Character:getPosition()
     return self.x, self.y
 end
 
+---Moves the character toward a point given a vx and vy velocity.
+---@param vx number The X linear velocity.
+---@param vy number The Y linear velocity.
+function Character:moveTowards(vx, vy)
+    self.vx = vx
+    self.vy = vy
+    self.collider:setLinearVelocity(vx, vy)
+end
+
 ---Updates the character.
 ---@param dt number The delta time.
 function Character:update(dt)
+    self.x = self.x + self.vx * dt
+    self.y = self.y + self.vy * dt
+
     -- Updates the current animation
     if self.currentAnimation then
         self.currentAnimation:update(dt)
-    end
-
-    -- Updates the position of the character based on its velocity
-    if #self.colliders > 0 then
-        for _, collider in ipairs(self.colliders) do
-            -- moves the colliders
-        end
     end
 end
 
