@@ -5,25 +5,31 @@
 
 
 --- Library
----@class physics
 local physics = {}
 
 
 --- Classes
----@class RectangleCollider
+---@class Collider
+---@field private body love.Body The physics body of the collider.
+---@field private fixture love.Fixture The fixture of the collider.
+---@field private __index? table The index of the collider (for iterating).
+local Collider = {}
+Collider.__index = Collider
+
+---@class RectangleCollider : Collider
 ---@field private body love.Body The physics body of the collider.
 ---@field private shape love.PolygonShape The shape of the collider.
 ---@field private fixture love.Fixture The fixture of the collider.
 ---@field private __index? table The index of the rectangle collider (for iterating).
-local RectangleCollider = {}
+local RectangleCollider = setmetatable({}, Collider)
 RectangleCollider.__index = RectangleCollider
 
----@class CircleCollider
+---@class CircleCollider : Collider
 ---@field private body love.Body The physics body of the collider.
 ---@field private shape love.CircleShape The shape of the collider.
 ---@field private fixture love.Fixture The fixture of the collider.
 ---@field private __index? table The index of the circle collider (for iterating).
-local CircleCollider = {}
+local CircleCollider = setmetatable({}, Collider)
 CircleCollider.__index = CircleCollider
 
 
@@ -32,14 +38,16 @@ CircleCollider.__index = CircleCollider
 ---@param world love.World # The physics world to which the collider belongs.
 ---@param x number # The X coordinate of the collider.
 ---@param y number # The Y coordinate of the collider.
----@param type love.BodyType # The type of the collider.
 ---@param width number # The width of the collider.
 ---@param height number # The height of the collider.
+---@param type love.BodyType # The type of the collider.
 ---@return RectangleCollider # A new RectangleCollider object.
 function physics.newRectangleCollider(world, x, y, width, height, type)
 	local body = love.physics.newBody(world, x, y, type)
 	local shape = love.physics.newRectangleShape(width, height)
 	local fixture = love.physics.newFixture(body, shape)
+	body:setFixedRotation(true)
+	fixture:setFriction(0)
 
 	---@type RectangleCollider
 	local self = {
@@ -51,10 +59,28 @@ function physics.newRectangleCollider(world, x, y, width, height, type)
 	return self
 end
 
----Setups the collider.
-function RectangleCollider:setupCollider()
-	self.body:setFixedRotation(true)
-	self.fixture:setFriction(0)
+---Creates a new CircleCollider object.
+---@param world love.World # The physics world to which the collider belongs.
+---@param x number # The X coordinate of the collider.
+---@param y number # The Y coordinate of the collider.
+---@param radius number # The radius of the collider.
+---@param type love.BodyType # The type of the collider. Default = "static".
+---@return CircleCollider # A new CircleCollider object.
+function physics.newCircleCollider(world, x, y, radius, type)
+	local body = love.physics.newBody(world, x, y, type)
+	local shape = love.physics.newCircleShape(radius)
+	local fixture = love.physics.newFixture(body, shape)
+	body:setFixedRotation(true)
+	fixture:setFriction(0)
+
+	---@type CircleCollider
+	local self = {
+		body = body,
+		shape = shape,
+		fixture = fixture
+	}
+	setmetatable(self, CircleCollider)
+	return self
 end
 
 ---Draws the rectangle collider.
@@ -72,13 +98,6 @@ function RectangleCollider:getSize()
 	return width, height
 end
 
----Gets the height of the rectangle collider.
----@return number height
-function RectangleCollider:getHeight()
-	local _, height = self:getSize()
-	return height
-end
-
 ---Gets the width of the rectangle collider.
 ---@return number width
 function RectangleCollider:getWidth()
@@ -86,36 +105,16 @@ function RectangleCollider:getWidth()
 	return width
 end
 
----Creates a new CircleCollider object.
----@param world love.World # The physics world to which the collider belongs.
----@param x number # The X coordinate of the collider.
----@param y number # The Y coordinate of the collider.
----@param radius number # The radius of the collider.
----@param type love.BodyType # The type of the collider. Default = "static".
----@return CircleCollider # A new CircleCollider object.
-function physics.newCircleCollider(world, x, y, radius, type)
-	local body = love.physics.newBody(world, x, y, type)
-	local shape = love.physics.newCircleShape(radius)
-	local fixture = love.physics.newFixture(body, shape)
-
-	---@type CircleCollider
-	local self = {
-		body = body,
-		shape = shape,
-		fixture = fixture
-	}
-	setmetatable(self, CircleCollider)
-	return self
+---Gets the height of the rectangle collider.
+---@return number height
+function RectangleCollider:getHeight()
+	local _, height = self:getSize()
+	return height
 end
 
 ---Draws the circle collider.
 function CircleCollider:draw()
 	love.graphics.circle("line", self.body:getX(), self.body:getY(), self.shape:getRadius())
-end
-
-function CircleCollider:setupCollider()
-	self.body:setFixedRotation(true)
-	self.fixture:setFriction(0)
 end
 
 return physics
