@@ -18,6 +18,15 @@ local animationState = {
 
 
 --- Classes
+---@class CollisionMask
+---@field private offsetX number The offset X position of the collision mask relative to the origin point of the animation.
+---@field private offsetY number The offset Y position of the collision mask relative to the origin point of the animation.
+---@field private width number The width of the collision mask.
+---@field private height number The height of the collision mask.
+---@field private __index? table The index of the collision mask (for iterating).
+local CollisionMask = {}
+CollisionMask.__index = CollisionMask
+
 ---@class Grid
 ---@field private tileWidth number The width of each tile.
 ---@field private tileHeight number The height of each tile.
@@ -37,13 +46,32 @@ Grid.__index = Grid
 ---@field private loop? boolean True if the animation should be looped or false if contrary.
 ---@field private timer number The timer used to track the time between frame changes.
 ---@field private currentState animationState The current state of the animation (PLAYING or STOPPED).
+---@field private collisionMask CollisionMask The collision mask of the animation.
 ---@field private __index? table The index of the animation (for iterating).
 local Animation = {}
 Animation.__index = Animation
 
 
 --- Methods
----Creates a grid of quads based on the given parameters.
+---Creates a new collision mask.
+---@param offsetX number The offset X position of the collision mask relative to the origin point of the animation.
+---@param offsetY number The offset Y position of the collision mask relative to the origin point of the animation.
+---@param width number The width of the collision mask.
+---@param height number The height of the collision mask.
+---@return CollisionMask
+function animation.newCollisionMask(offsetX, offsetY, width, height)
+	---@type CollisionMask
+	local self = {
+		offsetX = offsetX,
+		offsetY = offsetY,
+		width = width,
+		height = height
+	}
+	setmetatable(self, CollisionMask)
+	return self
+end
+
+---Creates a new grid of quads based on the given parameters.
 ---@param image love.Image The image to be used.
 ---@param tileWidth number The width of each tile.
 ---@param tileHeight number The height of each tile.
@@ -93,6 +121,10 @@ end
 ---@return Animation animation The new Animation object.
 function animation.newAnimation(image, grid, frames, originX, originY, interval, loop)
 	local tileWidth, tileHeight = grid:getTileSize()
+	local _originX = originX or tileWidth / 2
+	local _originY = originY or tileHeight / 2
+	local _interval = interval or 1
+	local _loop = loop or false
 
 	---@type Animation
 	local self = {
@@ -100,15 +132,55 @@ function animation.newAnimation(image, grid, frames, originX, originY, interval,
 		grid = grid,
 		frames = frames,
 		currentFrameIndex = 1,
-		originX = originX or tileWidth / 2,
-		originY = originY or tileHeight / 2,
-		interval = interval or 1,
-		loop = loop or false,
+		originX = _originX,
+		originY = _originY,
+		interval = _interval,
+		loop = _loop,
 		timer = 0,
-		currentState = animationState.PLAYING
+		currentState = animationState.PLAYING,
+		collisionMask = animation.newCollisionMask(0, 0, tileWidth, tileHeight)
 	}
 	setmetatable(self, Animation)
 	return self
+end
+
+---Draws the collision mask.
+---@param x number The X position to draw.
+---@param y number The Y position to draw.
+function CollisionMask:draw(x, y)
+	love.graphics.setColor(0, 1, 0, 0.3)
+	love.graphics.rectangle("fill", x, y, self.width, self.height)
+	love.graphics.setColor(1, 1, 1, 1)
+end
+
+---Gets the offset position of the collision mask.
+---@return number x The offset X position of the collision mask.
+---@return number y The offset Y position of the collision mask.
+function CollisionMask:getOffsetPosition()
+	return self.offsetX, self.offsetY
+end
+
+---Gets the size of the collision mask.
+---@return number width The width of the collision mask.
+---@return number height The height of the collision mask.
+function CollisionMask:getSize()
+	return self.width, self.height
+end
+
+---Sets the offset position of the collision mask.
+---@param offsetX number The new offset X position of the collision mask.
+---@param offsetY number The new offset Y position of the collision mask.
+function CollisionMask:setOffsetPosition(offsetX, offsetY)
+	self.offsetX = offsetX
+	self.offsetY = offsetY
+end
+
+---Sets the size of the collision mask.
+---@param width number The new width of the collision mask.
+---@param height number The new height of the collision mask.
+function CollisionMask:setSize(width, height)
+	self.width = width
+	self.height = height
 end
 
 ---Adds a quad to the grid.
@@ -130,33 +202,6 @@ function Grid:getQuad(index)
 	return self.quads[index]
 end
 
----Updates the animation. Should be called in love.update.
----@param dt number The delta time.
-function Animation:update(dt)
-	-- Don't update if there's only 1 frame
-	if #self.frames == 1 then return end
-
-	if self:isPlaying() then
-		self.timer = self.timer + dt
-
-		-- Changes to next frame and reset timer
-		if self.timer > self.interval then
-			self.currentFrameIndex = self.currentFrameIndex + 1
-			self.timer = self.timer - self.interval
-		end
-
-		-- Goes back to first frame if is looping or stop
-		if self.currentFrameIndex > #self.frames then
-			if self.loop then
-				self.currentFrameIndex = 1
-			else
-				self.currentFrameIndex = #self.frames
-				self:stop()
-			end
-		end
-	end
-end
-
 ---Draws the current frame of the animation. Should be called in love.draw.
 ---@param x number The X position of the animation.
 ---@param y number The Y position of the animation.
@@ -175,6 +220,47 @@ function Animation:draw(x, y, rotation, sx, sy)
 		self.originX,                        -- originX
 		self.originY                         -- originY
 	)
+end
+
+---Draws the collision mask of the animation.
+---@param x number The X position to draw.
+---@param y number The Y position to draw.
+function Animation:drawCollisionMask(x, y)
+	local maskX, maskY = self:getCollisionMaskPosition(x, y)
+	self.collisionMask:draw(maskX, maskY)
+end
+
+---Draws the origin point of the animation.
+---@param x number The X position of the origin point.
+---@param y number The Y position of the origin point.
+function Animation:drawOriginPoint(x, y)
+	love.graphics.circle("fill", x, y, 3)
+end
+
+---Gets the collistion mask of the animation.
+---@return CollisionMask collisionMask The collision mask of the animation.
+function Animation:getCollisionMask()
+	return self.collisionMask
+end
+
+---Calculates the collision mask position based on the origin point.
+---This returns the actual position offset considering the origin point.
+---@param x number The X position of the animation.
+---@param y number The Y position of the animation.
+---@return number maskX The calculated X position of the collision mask.
+---@return number maskY The calculated Y position of the collision mask.
+function Animation:getCollisionMaskPosition(x, y)
+	local maskOffsetX, maskOffsetY = self.collisionMask:getOffsetPosition()
+	local maskX = x - self.originX + maskOffsetX
+	local maskY = y - self.originY + maskOffsetY
+	return maskX, maskY
+end
+
+---Gets the size of the collision mask of the animation.
+---@return number width The width of the collision mask of the animation.
+---@return number height The height of the collision mask of the animation.
+function Animation:getCollisionMaskSize()
+	return self.collisionMask:getSize()
 end
 
 ---Gets the origin point of the animation.
@@ -262,6 +348,33 @@ end
 ---Stops the animation.
 function Animation:stop()
 	self.currentState = animationState.STOPPED
+end
+
+---Updates the animation. Should be called in love.update.
+---@param dt number The delta time.
+function Animation:update(dt)
+	-- Don't update if there's only 1 frame
+	if #self.frames == 1 then return end
+
+	if self:isPlaying() then
+		self.timer = self.timer + dt
+
+		-- Changes to next frame and reset timer
+		if self.timer > self.interval then
+			self.currentFrameIndex = self.currentFrameIndex + 1
+			self.timer = self.timer - self.interval
+		end
+
+		-- Goes back to first frame if is looping or stop
+		if self.currentFrameIndex > #self.frames then
+			if self.loop then
+				self.currentFrameIndex = 1
+			else
+				self.currentFrameIndex = #self.frames
+				self:stop()
+			end
+		end
+	end
 end
 
 return animation
