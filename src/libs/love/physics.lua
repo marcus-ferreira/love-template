@@ -64,7 +64,7 @@ end
 ---@param x number The X coordinate of the collider.
 ---@param y number The Y coordinate of the collider.
 ---@param radius number The radius of the collider.
----@param type love.BodyType The type of the collider. Default = "static".
+---@param type love.BodyType The type of the collider.
 ---@return CircleCollider circleCollider A new CircleCollider object.
 function physics.newCircleCollider(world, x, y, radius, type)
 	local body = love.physics.newBody(world, x, y, type)
@@ -81,6 +81,34 @@ function physics.newCircleCollider(world, x, y, radius, type)
 	}
 	setmetatable(self, CircleCollider)
 	return self
+end
+
+---Gets the linear velocity of the Body from its center of mass.
+---@return number x The X component of the velocity vector.
+---@return number y The Y component of the velocity vector.
+function Collider:getLinearVelocity()
+	return self.body:getLinearVelocity()
+end
+
+---Gets the collider position.
+---@return number x The X position of the collider.
+---@return number y The Y position of the collider.
+function Collider:getPosition()
+	return self.body:getPosition()
+end
+
+---Sets the linear velocity of the collider.
+---@param x number The X component of the velocity vector.
+---@param y number The Y component of the velocity vector.
+function Collider:setLinearVelocity(x, y)
+	self.body:setLinearVelocity(x, y)
+end
+
+---Sets the position of the collider.
+---@param x number The new X position of the collider.
+---@param y number The new Y position of the collider.
+function Collider:setPosition(x, y)
+	self.body:setPosition(x, y)
 end
 
 ---Draws the rectangle collider.
