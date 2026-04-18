@@ -29,7 +29,7 @@ Timer.__index = Timer
 
 --- Methods
 ---Creates a new Timer object.
----@return Timer # A new Timer object.
+---@return Timer timer A new Timer object.
 function timer.newTimer()
     ---@type Timer
     local self = {
@@ -41,7 +41,7 @@ function timer.newTimer()
 end
 
 ---Updates the timer.
----@param dt number # The delta time.
+---@param dt number The delta time.
 function Timer:update(dt)
     if self:isActive() then
         self.time = self.time - dt
@@ -52,13 +52,13 @@ function Timer:update(dt)
 end
 
 ---Gets the time of the timer.
----@return number # The time of the timer in seconds.
+---@return number time The time of the timer in seconds.
 function Timer:getTime()
     return self.time
 end
 
 ---Starts the timer with a specific time.
----@param time number # The time of the timer in seconds.
+---@param time number The time of the timer in seconds.
 function Timer:start(time)
     self.time = time
     self.currentState = timerState.ACTIVE
@@ -77,19 +77,19 @@ function Timer:finish()
 end
 
 ---Checks if the timer was not started.
----@return boolean # True if the timer was not started, false otherwise.
+---@return boolean wasNotStarted True if the timer was not started, false otherwise.
 function Timer:wasNotStarted()
     return self.currentState == timerState.NOT_STARTED
 end
 
 ---Checks if the timer is active.
----@return boolean # True if the timer is active, false otherwise.
+---@return boolean isActive True if the timer is active, false otherwise.
 function Timer:isActive()
     return self.currentState == timerState.ACTIVE
 end
 
 ---Checks if the timer is finished.
----@return boolean # True if the timer is finished, false otherwise.
+---@return boolean isFinished True if the timer is finished, false otherwise.
 function Timer:isFinished()
     return self.currentState == timerState.FINISHED
 end

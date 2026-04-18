@@ -30,9 +30,9 @@ Character.__index = Character
 
 --- Methods
 ---Creates a new Character object.
----@param x number # The X coordinate of the character.
----@param y number # The Y coordinate of the character.
----@return Character # A new Character object.
+---@param x number The X coordinate of the character.
+---@param y number The Y coordinate of the character.
+---@return Character character A new Character object.
 function character.newCharacter(x, y)
     ---@type Character
     local self = {
@@ -51,14 +51,14 @@ function character.newCharacter(x, y)
 end
 
 ---Adds a new animation to the character.
----@param name string # The name of the animation.
----@param image love.Image # The image to be used.
----@param grid Grid # The grid of quads created by newGrid.
----@param frames number[] # A table of the numbers of the quads in order.
----@param originX? number # The X origin for drawing. Default = 0.
----@param originY? number # The Y origin for drawing. Default = 0.
----@param interval? number # The time in seconds between frames. Default = 1.
----@param loop? boolean # Whether the animation should loop. Default = false.
+---@param name string The name of the animation.
+---@param image love.Image The image to be used.
+---@param grid Grid The grid of quads created by newGrid.
+---@param frames number[] A table of the numbers of the quads in order.
+---@param originX? number The X origin for drawing. Default = 0.
+---@param originY? number The Y origin for drawing. Default = 0.
+---@param interval? number The time in seconds between frames. Default = 1.
+---@param loop? boolean Whether the animation should loop. Default = false.
 function Character:addAnimation(name, image, grid, frames, originX, originY, interval, loop)
     assert(not self.animations[name], "Animation with name '" .. name .. "' already exists.")
     self.animations[name] = animation.newAnimation(image, grid, frames, originX, originY, interval, loop)
@@ -69,19 +69,19 @@ function Character:addAnimation(name, image, grid, frames, originX, originY, int
 end
 
 ---Adds a circular collider to the character.
----@param x number # The X coordinate of the collider.
----@param y number # The Y coordinate of the collider.
----@param radius number # The radius of the collider.
+---@param x number The X coordinate of the collider.
+---@param y number The Y coordinate of the collider.
+---@param radius number The radius of the collider.
 function Character:addCircleCollider(world, x, y, radius)
     local collider = physics.newCircleCollider(world, x, y, radius, "dynamic")
     table.insert(self.colliders, collider)
 end
 
 ---Adds a rectangle collider to the character.
----@param x number # The X coordinate of the collider.
----@param y number # The Y coordinate of the collider.
----@param width number # The width of the collider.
----@param height number # The height of the collider.
+---@param x number The X coordinate of the collider.
+---@param y number The Y coordinate of the collider.
+---@param width number The width of the collider.
+---@param height number The height of the collider.
 function Character:addRectangleCollider(world, x, y, width, height)
     local collider = physics.newRectangleCollider(world, x, y, width, height, "dynamic")
     table.insert(self.colliders, collider)
@@ -102,7 +102,7 @@ function Character:addState(name, enter, update, draw, exit)
 end
 
 ---Changes the current animation of the character.
----@param anim string # The animation of the character to be changed.
+---@param anim string The animation of the character to be changed.
 function Character:changeAnimation(anim)
     assert(self.animations[anim], "Animation with name '" .. anim .. "' does not exist.")
     self.currentAnimation = self.animations[anim]
@@ -110,7 +110,7 @@ function Character:changeAnimation(anim)
 end
 
 ---Changes the current state of the character.
----@param _state string # The state of the character to be changed.
+---@param _state string The state of the character to be changed.
 function Character:changeState(_state)
     assert(self.states[_state], "State with name '" .. _state .. "' does not exist.")
     self.currentState = self.states[_state]
@@ -138,14 +138,14 @@ function Character:getCurrentAnimation()
 end
 
 ---Gets the position of the character.
----@return number x # The X coordinate of the character.
----@return number y # The Y coordinate of the character.
+---@return number x The X coordinate of the character.
+---@return number y The Y coordinate of the character.
 function Character:getPosition()
     return self.x, self.y
 end
 
 ---Updates the character.
----@param dt number # The delta time.
+---@param dt number The delta time.
 function Character:update(dt)
     -- Updates the current animation
     if self.currentAnimation then

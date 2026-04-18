@@ -35,13 +35,13 @@ CircleCollider.__index = CircleCollider
 
 --- Methods
 ---Creates a new RectangleCollider object.
----@param world love.World # The physics world to which the collider belongs.
----@param x number # The X coordinate of the collider.
----@param y number # The Y coordinate of the collider.
----@param width number # The width of the collider.
----@param height number # The height of the collider.
----@param type love.BodyType # The type of the collider.
----@return RectangleCollider # A new RectangleCollider object.
+---@param world love.World The physics world to which the collider belongs.
+---@param x number The X coordinate of the collider.
+---@param y number The Y coordinate of the collider.
+---@param width number The width of the collider.
+---@param height number The height of the collider.
+---@param type love.BodyType The type of the collider.
+---@return RectangleCollider rectangleCollider A new RectangleCollider object.
 function physics.newRectangleCollider(world, x, y, width, height, type)
 	local body = love.physics.newBody(world, x, y, type)
 	local shape = love.physics.newRectangleShape(width, height)
@@ -60,12 +60,12 @@ function physics.newRectangleCollider(world, x, y, width, height, type)
 end
 
 ---Creates a new CircleCollider object.
----@param world love.World # The physics world to which the collider belongs.
----@param x number # The X coordinate of the collider.
----@param y number # The Y coordinate of the collider.
----@param radius number # The radius of the collider.
----@param type love.BodyType # The type of the collider. Default = "static".
----@return CircleCollider # A new CircleCollider object.
+---@param world love.World The physics world to which the collider belongs.
+---@param x number The X coordinate of the collider.
+---@param y number The Y coordinate of the collider.
+---@param radius number The radius of the collider.
+---@param type love.BodyType The type of the collider. Default = "static".
+---@return CircleCollider circleCollider A new CircleCollider object.
 function physics.newCircleCollider(world, x, y, radius, type)
 	local body = love.physics.newBody(world, x, y, type)
 	local shape = love.physics.newCircleShape(radius)
@@ -89,8 +89,8 @@ function RectangleCollider:draw()
 end
 
 ---Gets the size of the rectangle collider.
----@return number width # The collider width.
----@return number height # The collider height.
+---@return number width The collider width.
+---@return number height The collider height.
 function RectangleCollider:getSize()
 	local x1, y1, x2, _, _, _, _, y4 = self.body:getWorldPoints(self.shape:getPoints())
 	local width = x2 - x1
@@ -99,14 +99,14 @@ function RectangleCollider:getSize()
 end
 
 ---Gets the width of the rectangle collider.
----@return number width
+---@return number width The width of the rectangle collider.
 function RectangleCollider:getWidth()
 	local width, _ = self:getSize()
 	return width
 end
 
 ---Gets the height of the rectangle collider.
----@return number height
+---@return number height The height of the rectangle collider.
 function RectangleCollider:getHeight()
 	local _, height = self:getSize()
 	return height

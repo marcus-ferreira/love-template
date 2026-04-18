@@ -10,11 +10,11 @@ local color = {}
 
 
 --- Methods
----Converts a hex (given without '#') value to RGB. (output range: 0 - 1)
----@param hex string # The hex color value (e.g. "ff0000" for red or "f00" for red).
----@return number? R # The red component of the color (0 - 1).
----@return number? G # The green component of the color (0 - 1).
----@return number? B # The blue component of the color (0 - 1).
+---Converts a hex value to RGB. (output range: 0 - 1)
+---@param hex string The hex color value (e.g. "ff0000" for red or "f00" for red).
+---@return number? R The red component of the color (0 - 1).
+---@return number? G The green component of the color (0 - 1).
+---@return number? B The blue component of the color (0 - 1).
 function color.hexToRGB(hex)
 	hex = hex:gsub("#", "")
 	if #hex == 3 then

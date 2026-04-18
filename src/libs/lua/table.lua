@@ -5,10 +5,10 @@
 
 
 ---Creates a sliced table.
----@param tbl table # The table to be sliced.
----@param first? number # The first index of the sliced table. Default is 1.
----@param last? number # The last index of the sliced table. Default is the last key.
----@return table table # The sliced table.
+---@param tbl table The table to be sliced.
+---@param first? number The first index of the sliced table. Default is 1.
+---@param last? number The last index of the sliced table. Default is the last key.
+---@return table slicedTable The sliced table.
 function table.slice(tbl, first, last)
 	local sliced = {}
 	for i = first or 1, last or #tbl do
@@ -18,9 +18,9 @@ function table.slice(tbl, first, last)
 end
 
 ---Return the first index with the given value (or nil if not found).
----@param tbl table # The table to search.
----@param value any # The value to be searched.
----@return number | nil index # The index of the value.
+---@param tbl table The table to search.
+---@param value any The value to be searched.
+---@return number | nil indexOf The index of the value.
 function table.indexOf(tbl, value)
 	for i, v in ipairs(tbl) do
 		if v == value then
@@ -31,9 +31,9 @@ function table.indexOf(tbl, value)
 end
 
 ---Serialize a table to a string.
----@param tbl table # The table to be serialized.
----@param indent? number # The indentation value.
----@return string result # The serialized string.
+---@param tbl table The table to be serialized.
+---@param indent? number The indentation value.
+---@return string serializedString The serialized string.
 function table.serialize(tbl, indent)
 	indent = indent or 0
 	local result = "{\n"
@@ -60,17 +60,20 @@ function table.serialize(tbl, indent)
 end
 
 ---Deserialize a string to a table.
----@param str string # The string to be deserialized.
----@return function # The deserialize table.
+---@param str string The string to be deserialized.
+---@return table deserializedTable The deserialize table.
 function table.deserialize(str)
 	local func = load("return " .. str)
-	if func then return func() end
-	error("String incorreta.")
+	if func then
+		return
+			func()
+	end
+	error("Invalid string.")
 end
 
 ---Prints a Table content.
----@param tbl table # The table to be printed.
----@param indent? number # The indentation value.
+---@param tbl table The table to be printed.
+---@param indent? number The indentation value.
 function table.print(tbl, indent)
 	indent = indent or 0
 	local indentStr = string.rep("  ", indent)

@@ -24,7 +24,7 @@ State.__index = State
 ---@param update? function The function to be called when the state is updated.
 ---@param draw? function The function to be called when the state is drawn.
 ---@param exit? function The function to be called when the state is exited.
----@return State A new State object.
+---@return State state A new State object.
 function state.newState(name, enter, update, draw, exit)
 	---@type State
 	local self = {
