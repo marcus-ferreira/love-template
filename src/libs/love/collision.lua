@@ -92,7 +92,7 @@ end
 
 ---Gets the size of the circle.
 ---@return number radius The radius of the circle.
-function CircleCollider:getRadius()
+function CircleCollider:getSize()
 	return self.radius
 end
 
@@ -116,7 +116,7 @@ function CircleCollider:isColliding(other, x, y)
 		local dy = self.y + _y - math.max(otherY, math.min(self.y + _y, otherY + colliderHeight))
 		return math.sqrt(dx ^ 2 + dy ^ 2) <= self.radius
 	elseif otherClass == CircleCollider then
-		local colliderRadius = other:getRadius()
+		local colliderRadius = other:getSize()
 		return ((otherX - self.x - _x) ^ 2 + (otherY - self.y - _y) ^ 2) ^ 0.5 <= self.radius + colliderRadius
 	end
 	return false
@@ -124,15 +124,13 @@ end
 
 ---Sets the size of the circle.
 ---@param radius number The radius to set for the circle.
-function CircleCollider:setRadius(radius)
+function CircleCollider:setSize(radius)
 	self.radius = radius
 end
 
 ---Draws the rectangle.
 function RectangleCollider:draw()
-	local x = self.x - (self.width / 2)
-	local y = self.y - (self.height / 2)
-	love.graphics.rectangle("line", x, y, self.width, self.height)
+	love.graphics.rectangle("line", self.x, self.y, self.width, self.height)
 end
 
 ---Gets the size of the rectangle.
@@ -163,7 +161,7 @@ function RectangleCollider:isColliding(other, x, y)
 			self.x + self.width + _x >= otherX and
 			self.y + self.height + _y >= otherY
 	elseif otherClass == CircleCollider then
-		local colliderRadius = other:getRadius()
+		local colliderRadius = other:getSize()
 		local dx = otherX - math.max(self.x + _x, math.min(otherX, self.x + self.width + _x))
 		local dy = otherY - math.max(self.y + _y, math.min(otherY, self.y + self.height + _y))
 		return math.sqrt(dx ^ 2 + dy ^ 2) <= colliderRadius

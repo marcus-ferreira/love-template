@@ -7,8 +7,7 @@
 --- Imports
 local animation    = require("src.libs.love.animation")
 local collision    = require("src.libs.love.collision")
--- local physics   = require("src.libs.love.physics")
-local stateMachine = require("src.libs.love.stateMachine")
+local stateManager = require("src.libs.love.stateManager")
 
 
 --- Library
@@ -23,11 +22,10 @@ local entity = {}
 ---@field private height number The height of the entity.
 ---@field private vx number The X component of the linear velocity of the entity.
 ---@field private vy number The Y component of the linear velocity of the entity.
----@field private states State[] The states of the entity.
----@field private currentState State | nil The current state of the entity.
+---@field private stateManager StateManager The state manager of the entity.
 ---@field private animations Animation[] The animations of the entity.
----@field private currentAnimation Animation | nil The current animation of the entity.
----@field private collider RectangleCollider | CircleCollider The collider of the entity.
+---@field private currentAnimation Animation|nil The current animation of the entity.
+---@field private collider RectangleCollider|CircleCollider The collider of the entity.
 ---@field private __index? table The index of the Entity (for iterating).
 local Entity = {}
 Entity.__index = Entity
@@ -49,8 +47,7 @@ function entity.newEntity(x, y, width, height)
         height = height,
         vx = 0,
         vy = 0,
-        states = {},
-        currentState = nil,
+        stateManager = stateManager.newStateManager(),
         animations = {},
         currentAnimation = nil,
         collider = collision.newRectangleCollider(x, y, width, height)
@@ -64,34 +61,15 @@ end
 ---@param image love.Image The image to be used.
 ---@param grid Grid The grid of quads created by newGrid.
 ---@param frames number[] A table of the numbers of the quads in order.
----@param originX? number The X origin for drawing. Default = 0.
----@param originY? number The Y origin for drawing. Default = 0.
 ---@param interval? number The time in seconds between frames. Default = 1.
 ---@param loop? boolean Whether the animation should loop. Default = false.
-function Entity:addAnimation(name, image, grid, frames, originX, originY, interval, loop)
+function Entity:addAnimation(name, image, grid, frames, interval, loop)
     assert(not self.animations[name], "Animation with name '" .. name .. "' already exists.")
-    self.animations[name] = animation.newAnimation(image, grid, frames, originX, originY, interval, loop)
+    self.animations[name] = animation.newAnimation(image, grid, frames, nil, nil, interval, loop)
 
     if not self.currentAnimation then
         self.currentAnimation = self.animations[name]
     end
-end
-
----Adds a circular collider to the entity.
----@param x number The X coordinate of the collider.
----@param y number The Y coordinate of the collider.
----@param radius number The radius of the collider.
-function Entity:addCircleCollider(x, y, radius)
-    self.collider = collision.newCircleCollider(x, y, radius)
-end
-
----Adds a rectangle collider to the entity.
----@param x number The X coordinate of the collider.
----@param y number The Y coordinate of the collider.
----@param width number The width of the collider.
----@param height number The height of the collider.
-function Entity:addRectangleCollider(x, y, width, height)
-    self.collider = collision.newRectangleCollider(x, y, width, height)
 end
 
 ---Adds a new state to the entity.
@@ -101,11 +79,7 @@ end
 ---@param draw? function The function to be called when the state is drawn.
 ---@param exit? function The function to be called when the state is exited.
 function Entity:addState(name, enter, update, draw, exit)
-    assert(not self.states[name], "State with name '" .. name .. "' already exists.")
-    self.states[name] = stateMachine.newState(name, enter, update, draw, exit)
-    if not self.currentState then
-        self.currentState = self.states[name]
-    end
+    self.stateManager:addState(name, enter, update, draw, exit)
 end
 
 ---Changes the current animation of the entity.
@@ -117,23 +91,39 @@ function Entity:changeAnimation(_animation)
 end
 
 ---Changes the current state of the entity.
----@param _state string The state of the entity to be changed.
-function Entity:changeState(_state)
-    assert(self.states[_state], "State with name '" .. _state .. "' does not exist.")
-    self.currentState = self.states[_state]
-    self:changeAnimation(_state)
+---@param name string The state of the entity to be changed.
+---@param ... any # The enter parameters of the state.
+function Entity:changeState(name, ...)
+    self.stateManager:changeState(name, ...)
 end
 
 ---Draws the entity.
 function Entity:draw()
     assert(self.currentAnimation, "Entity has no current animation.")
     self.currentAnimation:draw(self.x, self.y)
+
+    -- Draw the current state
+    self.stateManager:draw()
 end
 
 ---Draws the colliders of the entity.
 function Entity:drawCollider()
     assert(self.collider, "Entity has no collider.")
     self.collider:draw()
+end
+
+---Gets an animation given its name.
+---@param _animation string The animation name to be returned.
+---@return Animation animation The animation to be returned.
+function Entity:getAnimation(_animation)
+    assert(self.animations[_animation], "Animation with name " .. _animation .. " does not exist.")
+    return self.animations[_animation]
+end
+
+---Gets the collider of the entity.
+---@return CircleCollider|RectangleCollider collider The collider of the entity.
+function Entity:getCollider()
+    return self.collider
 end
 
 ---Gets the current animation of the entity.
@@ -149,20 +139,18 @@ function Entity:getPosition()
     return self.x, self.y
 end
 
+---Gets the state manager of the entity.
+---@return StateManager stateManager The state manager of the entity.
+function Entity:getStateManager()
+    return self.stateManager
+end
+
 ---Moves the entity toward a point given a vx and vy velocity.
 ---@param vx number The X linear velocity.
 ---@param vy number The Y linear velocity.
 function Entity:moveTowards(vx, vy)
     self.vx = vx
     self.vy = vy
-end
-
----Sets the collider and collision mask of the current animation.
----@param width number The new width of the collider and collision mask of the current animation.
----@param height number The new height of the collider and collision mask of the current animation.
-function Entity:setColliderSize(width, height)
-    self.collider:setSize(width, height)
-    self.currentAnimation:getCollisionMask():setSize(width, height)
 end
 
 ---Updates the entity.
@@ -172,17 +160,12 @@ function Entity:update(dt)
     self.x = self.x + self.vx * dt
     self.y = self.y + self.vy * dt
 
-    -- Updates the collider position based on the collision mask of the current animation
-    if self.collider then
-        if self.currentAnimation then
-            local maskX, maskY = self.currentAnimation:getCollisionMaskPosition(self.x, self.y)
-            local maskWidth, maskHeight = self.currentAnimation:getCollisionMaskSize()
-            self.collider:setPosition(maskX + (maskWidth / 2), maskY + (maskHeight / 2))
-        else
-            local colliderX, colliderY = self.collider:getPosition()
-            self.collider:setPosition(colliderX + self.vx * dt, colliderY + self.vy * dt)
-        end
-    end
+    -- Updates the collider position
+    local colliderX, colliderY = self.collider:getPosition()
+    self.collider:setPosition(colliderX + self.vx * dt, colliderY + self.vy * dt)
+
+    -- Updates the state manager
+    self.stateManager:update(dt)
 
     -- Updates the current animation
     if self.currentAnimation then

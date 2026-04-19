@@ -1,0 +1,158 @@
+--[[
+	Author: Marcus Ferreira
+	Description: A state manager library for LOVE.
+]]
+
+
+--- Library
+---@class stateManager
+local stateManager = {}
+
+
+--- Classes
+---@class StateManager
+---@field private states State[] The states of the state manager.
+---@field private currentState State|nil The current state of the state manager.
+---@field private __index? table The index of the state manager (for iterating).
+local StateManager = {}
+StateManager.__index = StateManager
+
+---@class State
+---@field private name string The name of the state.
+---@field private __index? table The index of the state (for iterating).
+local State = {}
+State.__index = State
+
+
+--- Methods
+---Creates a new stateManager object.
+---@return StateManager # A new stateManager object.
+function stateManager.newStateManager()
+	---@type StateManager
+	local self = {
+		states = {},
+		currentState = nil
+	}
+	setmetatable(self, StateManager)
+	return self
+end
+
+---Creates a new State object.
+---@param name string # The name of the state.
+---@param enter? function # The function to be called when the state is entered.
+---@param update? function # The function to be called when the state is updated.
+---@param draw? function # The function to be called when the state is drawn.
+---@param exit? function # The function to be called when the state is exited.
+---@return State # A new State object.
+function stateManager.newState(name, enter, update, draw, exit)
+	local _enter = enter or function() end
+	local _update = update or function(dt) end
+	local _draw = draw or function() end
+	local _exit = exit or function() end
+
+	---@type State
+	local self = {
+		name = name,
+		enter = _enter,
+		update = _update,
+		draw = _draw,
+		exit = _exit
+	}
+	setmetatable(self, State)
+	return self
+end
+
+---Adds a state to the state manager.
+---@param name string # The name of the state to be added.
+---@param enter? function # The function to be called when the state is entered.
+---@param update? function # The function to be called when the state is updated.
+---@param draw? function # The function to be called when the state is drawn.
+---@param exit? function # The function to be called when the state is exited.
+function StateManager:addState(name, enter, update, draw, exit)
+	assert(not self.states[name], "State '" .. name .. "' already exists.")
+	self.states[name] = stateManager.newState(name, enter, update, draw, exit)
+	if not self.currentState then
+		self.currentState = self.states[name]
+	end
+end
+
+---Changes the current state of the state manager.
+---@param name string # The name of the state to change to.
+---@param ... any # The enter parameters of the state.
+function StateManager:changeState(name, ...)
+	assert(self.states[name], "State '" .. name .. "' does not exist.")
+	if self.currentState.exit then
+		self.currentState:exit()
+	end
+	self.currentState = self.states[name]
+	if self.currentState.enter then
+		self.currentState:enter(...)
+	end
+end
+
+---Gets the current state of the state manager.
+---@return State state The current state of the state manager.
+function StateManager:getCurrentState()
+	return self.currentState
+end
+
+---Gets a state given its name.
+---@param name string The name of the state.
+---@return State state The state.
+function StateManager:getState(name)
+	return self.states[name]
+end
+
+---Updates the current state of the state manager.
+---@param dt number # The delta time.
+function StateManager:update(dt)
+	if self.currentState.update then
+		self.currentState:update(dt)
+	end
+end
+
+---Draws the current state of the state manager.
+function StateManager:draw()
+	if self.currentState.draw then
+		self.currentState:draw()
+	end
+end
+
+---Calls the enter function of the state.
+---@param ... any # The enter parameters of the state.
+function State:enter(...)
+	self:enter(...)
+end
+
+---Gets the name of the state.
+---@return string name The name of the state.
+function State:getName()
+	return self.name
+end
+
+---Sets a function of a state.
+---@param name string The name of the function to be changed (enter, update, draw or exit).
+---@param func function The function to be called.
+function State:setFunction(name, func)
+	assert(name == "enter" or name == "update" or name == "draw" or name == "exit", "Function not available to change.")
+	assert(type(func) == "function", "func must be a function (enter, update, draw or exit)")
+	self[name] = func
+end
+
+---Calls the update function of the state.
+---@param dt number # The delta time.
+function State:update(dt)
+	self:update(dt)
+end
+
+---Calls the draw function of the state.
+function State:draw()
+	self:draw()
+end
+
+---Calls the exit function of the state.
+function State:exit()
+	self:exit()
+end
+
+return stateManager
