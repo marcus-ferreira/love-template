@@ -25,8 +25,8 @@ State.__index = State
 
 
 --- Methods
----Creates a new stateManager object.
----@return StateManager # A new stateManager object.
+---Creates a new StateManager object.
+---@return StateManager stateManager The new StateManager object.
 function stateManager.newStateManager()
 	---@type StateManager
 	local self = {
@@ -38,12 +38,12 @@ function stateManager.newStateManager()
 end
 
 ---Creates a new State object.
----@param name string # The name of the state.
----@param enter? function # The function to be called when the state is entered.
----@param update? function # The function to be called when the state is updated.
----@param draw? function # The function to be called when the state is drawn.
----@param exit? function # The function to be called when the state is exited.
----@return State # A new State object.
+---@param name string The name of the state.
+---@param enter? function The function to be called when the state is entered.
+---@param update? function The function to be called when the state is updated.
+---@param draw? function The function to be called when the state is drawn.
+---@param exit? function The function to be called when the state is exited.
+---@return State state A new State object.
 function stateManager.newState(name, enter, update, draw, exit)
 	local _enter = enter or function() end
 	local _update = update or function(dt) end
@@ -62,12 +62,12 @@ function stateManager.newState(name, enter, update, draw, exit)
 	return self
 end
 
----Adds a state to the state manager.
----@param name string # The name of the state to be added.
----@param enter? function # The function to be called when the state is entered.
----@param update? function # The function to be called when the state is updated.
----@param draw? function # The function to be called when the state is drawn.
----@param exit? function # The function to be called when the state is exited.
+---Adds a new state to the state manager.
+---@param name string The name of the state to be added.
+---@param enter? function The function to be called when the state is entered.
+---@param update? function The function to be called when the state is updated.
+---@param draw? function The function to be called when the state is drawn.
+---@param exit? function The function to be called when the state is exited.
 function StateManager:addState(name, enter, update, draw, exit)
 	assert(not self.states[name], "State '" .. name .. "' already exists.")
 	self.states[name] = stateManager.newState(name, enter, update, draw, exit)
@@ -77,37 +77,16 @@ function StateManager:addState(name, enter, update, draw, exit)
 end
 
 ---Changes the current state of the state manager.
----@param name string # The name of the state to change to.
----@param ... any # The enter parameters of the state.
+---@param name string The name of the state to change to.
+---@param ... any The enter parameters of the state.
 function StateManager:changeState(name, ...)
-	assert(self.states[name], "State '" .. name .. "' does not exist.")
+	assert(self.states[name], "State '" .. name .. "' does not exists.")
 	if self.currentState.exit then
 		self.currentState:exit()
 	end
 	self.currentState = self.states[name]
 	if self.currentState.enter then
 		self.currentState:enter(...)
-	end
-end
-
----Gets the current state of the state manager.
----@return State state The current state of the state manager.
-function StateManager:getCurrentState()
-	return self.currentState
-end
-
----Gets a state given its name.
----@param name string The name of the state.
----@return State state The state.
-function StateManager:getState(name)
-	return self.states[name]
-end
-
----Updates the current state of the state manager.
----@param dt number # The delta time.
-function StateManager:update(dt)
-	if self.currentState.update then
-		self.currentState:update(dt)
 	end
 end
 
@@ -118,8 +97,30 @@ function StateManager:draw()
 	end
 end
 
+---Gets the current state of the state manager.
+---@return State|nil state The current state of the state manager.
+function StateManager:getCurrentState()
+	return self.currentState
+end
+
+---Gets a state given its name.
+---@param name string The name of the state.
+---@return State state The state.
+function StateManager:getState(name)
+	assert(self.states[name], "State with name '" .. name "' does not exists.")
+	return self.states[name]
+end
+
+---Updates the current state of the state manager.
+---@param dt number The delta time.
+function StateManager:update(dt)
+	if self.currentState.update then
+		self.currentState:update(dt)
+	end
+end
+
 ---Calls the enter function of the state.
----@param ... any # The enter parameters of the state.
+---@param ... any The enter parameters of the state.
 function State:enter(...)
 	self:enter(...)
 end
@@ -140,7 +141,7 @@ function State:setFunction(name, func)
 end
 
 ---Calls the update function of the state.
----@param dt number # The delta time.
+---@param dt number The delta time.
 function State:update(dt)
 	self:update(dt)
 end

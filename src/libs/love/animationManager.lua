@@ -1,12 +1,12 @@
 --[[
 	Author: Marcus Ferreira
-	Description: A animation library for LOVE.
+	Description: A animation manager library for LOVE.
 ]]
 
 
 --- Library
----@class animation
-local animation = {}
+---@class animationManager
+local animationManager = {}
 
 
 --- Enums
@@ -18,6 +18,13 @@ local animationState = {
 
 
 --- Classes
+---@class AnimationManager
+---@field private animations Animation[] The animations of the animation manager.
+---@field private currentAnimation Animation|nil The current animation of the animation manager.
+---@field private __index? table The index of the animation manager (for iterating).
+local AnimationManager = {}
+AnimationManager.__index = AnimationManager
+
 ---@class Grid
 ---@field private tileWidth number The width of each tile.
 ---@field private tileHeight number The height of each tile.
@@ -27,6 +34,7 @@ local Grid = {}
 Grid.__index = Grid
 
 ---@class Animation
+---@field private name string The name of the animation.
 ---@field private image love.Image The image to be used.
 ---@field private grid Grid The grid of quads created by newGrid.
 ---@field private frames number[] A table of the numbers of the quads in order.
@@ -43,6 +51,18 @@ Animation.__index = Animation
 
 
 --- Methods
+---Creates a new AnimationManager object.
+---@return AnimationManager animationManager The new AnimationManager object.
+function animationManager.newAnimationManager()
+	---@type AnimationManager
+	local self = {
+		animations = {},
+		currentAnimation = nil
+	}
+	setmetatable(self, AnimationManager)
+	return self
+end
+
 ---Creates a new grid of quads based on the given parameters.
 ---@param image love.Image The image to be used.
 ---@param tileWidth number The width of each tile.
@@ -54,7 +74,7 @@ Animation.__index = Animation
 ---@param offsetX? number The margin in between tiles columns. Default = 0.
 ---@param offsetY? number The margin in between tiles rows. Default = 0.
 ---@return Grid grid The Grid object.
-function animation.newGrid(image, tileWidth, tileHeight, columns, rows, left, top, offsetX, offsetY)
+function animationManager.newGrid(image, tileWidth, tileHeight, columns, rows, left, top, offsetX, offsetY)
 	local _left = left or 0
 	local _top = top or 0
 	local _offsetX = offsetX or 0
@@ -83,6 +103,7 @@ function animation.newGrid(image, tileWidth, tileHeight, columns, rows, left, to
 end
 
 ---Creates a new Animation object.
+---@param name string The name of the animation.
 ---@param image love.Image The image to be used.
 ---@param grid Grid The grid of quads created by newGrid.
 ---@param frames number[] A table of the numbers of the quads in order.
@@ -91,7 +112,7 @@ end
 ---@param interval? number The interval between frame quads, in seconds. Default = 1.
 ---@param loop? boolean True if the animation should be looped or false if contrary. Default = false.
 ---@return Animation animation The new Animation object.
-function animation.newAnimation(image, grid, frames, originX, originY, interval, loop)
+function animationManager.newAnimation(name, image, grid, frames, originX, originY, interval, loop)
 	local tileWidth, tileHeight = grid:getTileSize()
 	local _originX = originX or tileWidth / 2
 	local _originY = originY or tileHeight / 2
@@ -100,6 +121,7 @@ function animation.newAnimation(image, grid, frames, originX, originY, interval,
 
 	---@type Animation
 	local self = {
+		name = name,
 		image = image,
 		grid = grid,
 		frames = frames,
@@ -113,6 +135,63 @@ function animation.newAnimation(image, grid, frames, originX, originY, interval,
 	}
 	setmetatable(self, Animation)
 	return self
+end
+
+---Adds a new animation to the animation manager.
+---@param name string The name of the animation.
+---@param image love.Image The image to be used.
+---@param grid Grid The grid of quads created by newGrid.
+---@param frames number[] A table of the numbers of the quads in order.
+---@param originX? number The X origin for drawing. Default = 0.
+---@param originY? number The Y origin for drawing. Default = 0.
+---@param interval? number The interval between frame quads, in seconds. Default = 1.
+---@param loop? boolean True if the animation should be looped or false if contrary. Default = false.
+function AnimationManager:addAnimation(name, image, grid, frames, originX, originY, interval, loop)
+	assert(not self.animations[name], "Animation with name '" .. name .. "' already exists.")
+	self.animations[name] = animationManager.newAnimation(name, image, grid, frames, originX, originY, interval, loop)
+	if not self.currentAnimation then
+		self.currentAnimation = self.animations[name]
+	end
+end
+
+---Changes the current animation of the animation manager.
+---@param name string The name of the animation to change to.
+function AnimationManager:changeAnimation(name)
+	assert(self.animations[name], "Animation '" .. name .. "' does not exists.")
+	self.currentAnimation = self.animations[name]
+	self.currentAnimation:play()
+end
+
+---Draws the current animation of the animation manager.
+---@param x number The X position of the animation.
+---@param y number The Y position of the animation.
+---@param rotation? number The rotation value of the animation.
+---@param sx? number The scaleX of the animation.
+---@param sy? number The scaleY of the animation.
+function AnimationManager:draw(x, y, rotation, sx, sy)
+	if self.currentAnimation then
+		self.currentAnimation:draw(x, y, rotation, sx, sy)
+	end
+end
+
+---Gets the animation given its name.
+---@param name string The name of the animation.
+---@return Animation animation The animation.
+function AnimationManager:getAnimation(name)
+	assert(self.animations[name], "Animation with name '" .. name .. "' does not exists.")
+	return self.animations[name]
+end
+
+---Gets the current animation of the animation manager.
+---@return Animation|nil animation The current animation of the animation manager.
+function AnimationManager:getCurrentAnimation()
+	return self.currentAnimation
+end
+
+---Updates the current animation of the animation manager.
+---@param dt number The delta time.
+function AnimationManager:update(dt)
+	self.currentAnimation:update(dt)
 end
 
 ---Adds a quad to the grid.
@@ -251,4 +330,4 @@ function Animation:update(dt)
 	end
 end
 
-return animation
+return animationManager

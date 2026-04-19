@@ -5,9 +5,10 @@
 
 
 --- Imports
-local animation    = require("src.libs.love.animation")
-local collision    = require("src.libs.love.collision")
-local stateManager = require("src.libs.love.stateManager")
+local animationManager = require("src.libs.love.animationManager")
+local collision        = require("src.libs.love.collision")
+local stateManager     = require("src.libs.love.stateManager")
+local vector           = require("src.libs.love.vector")
 
 
 --- Library
@@ -16,15 +17,12 @@ local entity = {}
 
 --- Classes
 ---@class Entity
----@field private x number The X coordinate of the entity.
----@field private y number The Y coordinate of the entity.
+---@field private position Vector2 The vector2 of the position of the entity.
 ---@field private width number The width of the entity.
 ---@field private height number The height of the entity.
----@field private vx number The X component of the linear velocity of the entity.
----@field private vy number The Y component of the linear velocity of the entity.
+---@field private velocity Vector2 The vector2 of the linear velocity of the entity.
 ---@field private stateManager StateManager The state manager of the entity.
----@field private animations Animation[] The animations of the entity.
----@field private currentAnimation Animation|nil The current animation of the entity.
+---@field private animationManager AnimationManager The animation manager of the entity.
 ---@field private collider RectangleCollider|CircleCollider The collider of the entity.
 ---@field private __index? table The index of the Entity (for iterating).
 local Entity = {}
@@ -41,15 +39,12 @@ Entity.__index = Entity
 function entity.newEntity(x, y, width, height)
     ---@type Entity
     local self = {
-        x = x,
-        y = y,
+        position = vector.newVector2(x, y),
         width = width,
         height = height,
-        vx = 0,
-        vy = 0,
+        velocity = vector.newVector2(),
         stateManager = stateManager.newStateManager(),
-        animations = {},
-        currentAnimation = nil,
+        animationManager = animationManager.newAnimationManager(),
         collider = collision.newRectangleCollider(x, y, width, height)
     }
     setmetatable(self, Entity)
@@ -61,15 +56,12 @@ end
 ---@param image love.Image The image to be used.
 ---@param grid Grid The grid of quads created by newGrid.
 ---@param frames number[] A table of the numbers of the quads in order.
----@param interval? number The time in seconds between frames. Default = 1.
----@param loop? boolean Whether the animation should loop. Default = false.
-function Entity:addAnimation(name, image, grid, frames, interval, loop)
-    assert(not self.animations[name], "Animation with name '" .. name .. "' already exists.")
-    self.animations[name] = animation.newAnimation(image, grid, frames, nil, nil, interval, loop)
-
-    if not self.currentAnimation then
-        self.currentAnimation = self.animations[name]
-    end
+---@param originX? number The X origin for drawing. Default = 0.
+---@param originY? number The Y origin for drawing. Default = 0.
+---@param interval? number The interval between frame quads, in seconds. Default = 1.
+---@param loop? boolean True if the animation should be looped or false if contrary. Default = false.
+function Entity:addAnimation(name, image, grid, frames, originX, originY, interval, loop)
+    self.animationManager:addAnimation(name, image, grid, frames, originX, originY, interval, loop)
 end
 
 ---Adds a new state to the entity.
@@ -83,11 +75,9 @@ function Entity:addState(name, enter, update, draw, exit)
 end
 
 ---Changes the current animation of the entity.
----@param _animation string The animation of the entity to be changed.
-function Entity:changeAnimation(_animation)
-    assert(self.animations[_animation], "Animation with name '" .. _animation .. "' does not exist.")
-    self.currentAnimation = self.animations[_animation]
-    self.currentAnimation:play()
+---@param name string The name of the animation of the entity to be changed.
+function Entity:changeAnimation(name)
+    self.animationManager:changeAnimation(name)
 end
 
 ---Changes the current state of the entity.
@@ -98,26 +88,18 @@ function Entity:changeState(name, ...)
 end
 
 ---Draws the entity.
-function Entity:draw()
-    assert(self.currentAnimation, "Entity has no current animation.")
-    self.currentAnimation:draw(self.x, self.y)
-
-    -- Draw the current state
+---@param rotation? number The rotation value of the animation.
+---@param sx? number The scaleX of the animation.
+---@param sy? number The scaleY of the animation.
+function Entity:draw(rotation, sx, sy)
+    self.animationManager:draw(self.position:getX(), self.position:getY(), rotation, sx, sy)
     self.stateManager:draw()
 end
 
----Draws the colliders of the entity.
-function Entity:drawCollider()
-    assert(self.collider, "Entity has no collider.")
-    self.collider:draw()
-end
-
----Gets an animation given its name.
----@param _animation string The animation name to be returned.
----@return Animation animation The animation to be returned.
-function Entity:getAnimation(_animation)
-    assert(self.animations[_animation], "Animation with name " .. _animation .. " does not exist.")
-    return self.animations[_animation]
+---Gets the animation manager of the entity.
+---@return AnimationManager animationManager The animation manager.
+function Entity:getAnimationManager()
+    return self.animationManager
 end
 
 ---Gets the collider of the entity.
@@ -126,17 +108,10 @@ function Entity:getCollider()
     return self.collider
 end
 
----Gets the current animation of the entity.
----@return Animation currentAnimation The current animation of the entity.
-function Entity:getCurrentAnimation()
-    return self.currentAnimation
-end
-
 ---Gets the position of the entity.
----@return number x The X coordinate of the entity.
----@return number y The Y coordinate of the entity.
+---@return Vector2 position The vector2 of the position of the entity.
 function Entity:getPosition()
-    return self.x, self.y
+    return self.position
 end
 
 ---Gets the state manager of the entity.
@@ -145,32 +120,43 @@ function Entity:getStateManager()
     return self.stateManager
 end
 
----Moves the entity toward a point given a vx and vy velocity.
----@param vx number The X linear velocity.
----@param vy number The Y linear velocity.
-function Entity:moveTowards(vx, vy)
-    self.vx = vx
-    self.vy = vy
+---Gets the velocity of the entity.
+---@return Vector2 velocity The vector2 of the velocity of the entity.
+function Entity:getVelocity()
+    return self.velocity
+end
+
+---Sets a new value to the position of the entity.
+---@param vector2 Vector2 The vector2 of the new position of the entity.
+function Entity:setPosition(vector2)
+    self.position = vector2
+end
+
+---Sets a new value to the velocity of the entity.
+---@param vector2 Vector2 The vector2 of the new velocity of the entity.
+function Entity:setVelocity(vector2)
+    self.velocity = vector2
+    self.collider:setVelocity(vector2)
 end
 
 ---Updates the entity.
 ---@param dt number The delta time.
 function Entity:update(dt)
     -- Updates the position
-    self.x = self.x + self.vx * dt
-    self.y = self.y + self.vy * dt
+    local playerDirection = (self.position + self.velocity) - self.position
+    self:setPosition(self.position + (playerDirection:normalize() * 60 * dt))
 
     -- Updates the collider position
-    local colliderX, colliderY = self.collider:getPosition()
-    self.collider:setPosition(colliderX + self.vx * dt, colliderY + self.vy * dt)
+    local colliderPosition = self.collider:getPosition()
+    local colliderVelocity = self.collider:getVelocity()
+    local colliderDirection = (colliderPosition + colliderVelocity) - colliderPosition
+    self.collider:setPosition(colliderPosition + (colliderDirection:normalize() * 60 * dt))
 
     -- Updates the state manager
     self.stateManager:update(dt)
 
     -- Updates the current animation
-    if self.currentAnimation then
-        self.currentAnimation:update(dt)
-    end
+    self.animationManager:update(dt)
 end
 
 return entity
