@@ -18,15 +18,6 @@ local animationState = {
 
 
 --- Classes
----@class CollisionMask
----@field private offsetX number The offset X position of the collision mask relative to the origin point of the animation.
----@field private offsetY number The offset Y position of the collision mask relative to the origin point of the animation.
----@field private width number The width of the collision mask.
----@field private height number The height of the collision mask.
----@field private __index? table The index of the collision mask (for iterating).
-local CollisionMask = {}
-CollisionMask.__index = CollisionMask
-
 ---@class Grid
 ---@field private tileWidth number The width of each tile.
 ---@field private tileHeight number The height of each tile.
@@ -46,31 +37,12 @@ Grid.__index = Grid
 ---@field private loop? boolean True if the animation should be looped or false if contrary.
 ---@field private timer number The timer used to track the time between frame changes.
 ---@field private currentState animationState The current state of the animation (PLAYING or STOPPED).
----@field private collisionMask CollisionMask The collision mask of the animation.
 ---@field private __index? table The index of the animation (for iterating).
 local Animation = {}
 Animation.__index = Animation
 
 
 --- Methods
----Creates a new collision mask.
----@param offsetX number The offset X position of the collision mask relative to the origin point of the animation.
----@param offsetY number The offset Y position of the collision mask relative to the origin point of the animation.
----@param width number The width of the collision mask.
----@param height number The height of the collision mask.
----@return CollisionMask
-function animation.newCollisionMask(offsetX, offsetY, width, height)
-	---@type CollisionMask
-	local self = {
-		offsetX = offsetX,
-		offsetY = offsetY,
-		width = width,
-		height = height
-	}
-	setmetatable(self, CollisionMask)
-	return self
-end
-
 ---Creates a new grid of quads based on the given parameters.
 ---@param image love.Image The image to be used.
 ---@param tileWidth number The width of each tile.
@@ -137,50 +109,10 @@ function animation.newAnimation(image, grid, frames, originX, originY, interval,
 		interval = _interval,
 		loop = _loop,
 		timer = 0,
-		currentState = animationState.PLAYING,
-		collisionMask = animation.newCollisionMask(0, 0, tileWidth, tileHeight)
+		currentState = animationState.PLAYING
 	}
 	setmetatable(self, Animation)
 	return self
-end
-
----Draws the collision mask.
----@param x number The X position to draw.
----@param y number The Y position to draw.
-function CollisionMask:draw(x, y)
-	love.graphics.setColor(0, 1, 0, 0.3)
-	love.graphics.rectangle("fill", x, y, self.width, self.height)
-	love.graphics.setColor(1, 1, 1, 1)
-end
-
----Gets the offset position of the collision mask.
----@return number x The offset X position of the collision mask.
----@return number y The offset Y position of the collision mask.
-function CollisionMask:getOffsetPosition()
-	return self.offsetX, self.offsetY
-end
-
----Gets the size of the collision mask.
----@return number width The width of the collision mask.
----@return number height The height of the collision mask.
-function CollisionMask:getSize()
-	return self.width, self.height
-end
-
----Sets the offset position of the collision mask.
----@param offsetX number The new offset X position of the collision mask.
----@param offsetY number The new offset Y position of the collision mask.
-function CollisionMask:setOffsetPosition(offsetX, offsetY)
-	self.offsetX = offsetX
-	self.offsetY = offsetY
-end
-
----Sets the size of the collision mask.
----@param width number The new width of the collision mask.
----@param height number The new height of the collision mask.
-function CollisionMask:setSize(width, height)
-	self.width = width
-	self.height = height
 end
 
 ---Adds a quad to the grid.
@@ -222,45 +154,11 @@ function Animation:draw(x, y, rotation, sx, sy)
 	)
 end
 
----Draws the collision mask of the animation.
----@param x number The X position to draw.
----@param y number The Y position to draw.
-function Animation:drawCollisionMask(x, y)
-	local maskX, maskY = self:getCollisionMaskPosition(x, y)
-	self.collisionMask:draw(maskX, maskY)
-end
-
 ---Draws the origin point of the animation.
 ---@param x number The X position of the origin point.
 ---@param y number The Y position of the origin point.
 function Animation:drawOriginPoint(x, y)
 	love.graphics.circle("fill", x, y, 3)
-end
-
----Gets the collistion mask of the animation.
----@return CollisionMask collisionMask The collision mask of the animation.
-function Animation:getCollisionMask()
-	return self.collisionMask
-end
-
----Calculates the collision mask position based on the origin point.
----This returns the actual position offset considering the origin point.
----@param x number The X position of the animation.
----@param y number The Y position of the animation.
----@return number maskX The calculated X position of the collision mask.
----@return number maskY The calculated Y position of the collision mask.
-function Animation:getCollisionMaskPosition(x, y)
-	local maskOffsetX, maskOffsetY = self.collisionMask:getOffsetPosition()
-	local maskX = x - self.originX + maskOffsetX
-	local maskY = y - self.originY + maskOffsetY
-	return maskX, maskY
-end
-
----Gets the size of the collision mask of the animation.
----@return number width The width of the collision mask of the animation.
----@return number height The height of the collision mask of the animation.
-function Animation:getCollisionMaskSize()
-	return self.collisionMask:getSize()
 end
 
 ---Gets the origin point of the animation.
@@ -312,37 +210,13 @@ function Animation:setLoop(loop)
 end
 
 ---Sets the origin point of the animation.
----@param point "top-left" | "top-middle" | "top-right" | "middle-left" | "center" | "middle-right" | "bottom-left" | "bottom-middle" | "bottom-right" The new origin point of the animation.
-function Animation:setOriginPoint(point)
+---@param x number The new X position of the origin point.
+---@param y number The new Y position of the origin point.
+function Animation:setOriginPoint(x, y)
 	local tileWidth, tileHeight = self.grid:getTileSize()
-	if point == "top-left" then
-		self.originX = 0
-		self.originY = 0
-	elseif point == "top-middle" then
-		self.originX = tileWidth / 2
-		self.originY = 0
-	elseif point == "top-right" then
-		self.originX = tileWidth
-		self.originY = 0
-	elseif point == "middle-left" then
-		self.originX = 0
-		self.originY = tileHeight / 2
-	elseif point == "center" then
-		self.originX = tileWidth / 2
-		self.originY = tileHeight / 2
-	elseif point == "middle-right" then
-		self.originX = tileWidth
-		self.originY = tileHeight / 2
-	elseif point == "bottom-left" then
-		self.originX = 0
-		self.originY = tileHeight
-	elseif point == "bottom-middle" then
-		self.originX = tileWidth / 2
-		self.originY = tileHeight
-	elseif point == "bottom-right" then
-		self.originX = tileWidth
-		self.originY = tileHeight
-	end
+	assert((x >= 0 and x <= tileWidth) and (y >= 0 and y <= tileHeight), "Origin point outside animation bounds.")
+	self.originX = x
+	self.originY = y
 end
 
 ---Stops the animation.
