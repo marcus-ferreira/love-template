@@ -129,13 +129,13 @@ end
 ---Sets a new value to the position of the entity.
 ---@param vector2 Vector2 The vector2 of the new position of the entity.
 function Entity:setPosition(vector2)
-    self.position = vector2
+    self.position:setCoordinates(vector2:getX(), vector2:getY())
 end
 
 ---Sets a new value to the velocity of the entity.
 ---@param vector2 Vector2 The vector2 of the new velocity of the entity.
 function Entity:setVelocity(vector2)
-    self.velocity = vector2
+    self.velocity:setCoordinates(vector2:getX(), vector2:getY())
     self.collider:setVelocity(vector2)
 end
 
@@ -144,7 +144,8 @@ end
 function Entity:update(dt)
     -- Updates the position
     local playerDirection = (self.position + self.velocity) - self.position
-    self:setPosition(self.position + (playerDirection:normalize() * 60 * dt))
+    local newPlayerPosition = self.position + (playerDirection:normalize() * 60 * dt)
+    self:setPosition()
 
     -- Updates the collider position
     local colliderPosition = self.collider:getPosition()

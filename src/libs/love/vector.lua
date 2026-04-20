@@ -33,26 +33,18 @@ function vector.newVector2(x, y)
 	return self
 end
 
----Adds two vectors together or adds a scalar to the vector.
----@param v Vector2 | number The vector or scalar to add.
+---Adds two vectors together.
+---@param v Vector2 The vector to add.
 ---@return Vector2 vector2 The vector result of the addition.
 function Vector2:__add(v)
-	if type(v) == "number" then
-		return vector.newVector2(self.x + v, self.y + v)
-	else
-		return vector.newVector2(self.x + v:getX(), self.y + v:getY())
-	end
+	return vector.newVector2(self.x + v:getX(), self.y + v:getY())
 end
 
----Subtracts one vector from another or subtracts a scalar from the vector.
----@param v Vector2 | number The vector or scalar to subtract.
+---Subtracts one vector from another.
+---@param v Vector2 The vector or scalar to subtract.
 ---@return Vector2 vector2 The vector result of the subtraction.
 function Vector2:__sub(v)
-	if type(v) == "number" then
-		return vector.newVector2(self.x - v, self.y - v)
-	else
-		return vector.newVector2(self.x - v:getX(), self.y - v:getY())
-	end
+	return vector.newVector2(self.x - v:getX(), self.y - v:getY())
 end
 
 ---Multiplies the vector by a scalar.
@@ -75,6 +67,12 @@ function Vector2:__tostring()
 	return "Vector(" .. self.x .. ", " .. self.y .. ")"
 end
 
+---Gets the absolute value of the vector.
+---@return Vector2 abs The absolute value vector.
+function Vector2:abs()
+	return vector.newVector2(math.abs(self.x), math.abs(self.y))
+end
+
 --- Calculates the cross product of the vector with another vector.
 ---@param v Vector2 The vector to calculate the cross product with.
 ---@return number cross The cross product of the two vectors.
@@ -89,13 +87,20 @@ function Vector2:dot(v)
 	return self.x * v:getX() + self.y * v:getY()
 end
 
+---Gets the coordinates of the vector.
+---@return number x The X coordinate of the vector.
+---@return number y The Y coordinate of the vector.
+function Vector2:getCoordinates()
+	return self.x, self.y
+end
+
 ---Gets the distance between two vectors.
 ---@param v Vector2 The vector to calculate the distance to.
 ---@return number distance The distance between the two vectors.
 function Vector2:getDistance(v)
 	local dx = self.x - v:getX()
 	local dy = self.y - v:getY()
-	return (dx ^ 2 + dy ^ 2) ^ 0.5
+	return math.sqrt((dx * dx) + (dy * dy))
 end
 
 ---Gets the X component of the vector.
@@ -110,10 +115,17 @@ function Vector2:getY()
 	return self.y
 end
 
+---Gets the square of the lenght of the vector.
+---@return number lenSq The square of the lenght of the vector.
+function Vector2:lenSq()
+	return (self.x * self.x) + (self.y * self.y)
+end
+
 ---Gets the magnitude of the vector.
 ---@return number magnitude The magnitude of the vector.
 function Vector2:magnitude()
-	return (self.x ^ 2 + self.y ^ 2) ^ 0.5
+	local selfSq = self:lenSq()
+	return math.sqrt(selfSq.x + selfSq.y)
 end
 
 ---Gets the normalized version of the vector.
@@ -124,6 +136,14 @@ function Vector2:normalize()
 		return self / mag
 	end
 	return vector.newVector2(0, 0)
+end
+
+---Sets the coordinates of the vector.
+---@param x number The new value of the X coordinate.
+---@param y number The new value of the Y coordinate.
+function Vector2:setCoordinates(x, y)
+	self.x = x
+	self.y = y
 end
 
 ---Sets a new value to the X coordinate.

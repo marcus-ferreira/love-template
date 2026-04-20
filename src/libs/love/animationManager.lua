@@ -4,6 +4,10 @@
 ]]
 
 
+--- Imports
+local vector = require("src.libs.love.vector")
+
+
 --- Library
 ---@class animationManager
 local animationManager = {}
@@ -39,8 +43,7 @@ Grid.__index = Grid
 ---@field private grid Grid The grid of quads created by newGrid.
 ---@field private frames number[] A table of the numbers of the quads in order.
 ---@field private currentFrameIndex number The index of the current frame in the frames table.
----@field private originX? number The X origin for drawing.
----@field private originY? number The Y origin for drawing.
+---@field private originPoint? Vector2 The origin point vector for drawing.
 ---@field private interval? number The interval between frame quads, in seconds.
 ---@field private loop? boolean True if the animation should be looped or false if contrary.
 ---@field private timer number The timer used to track the time between frame changes.
@@ -126,8 +129,7 @@ function animationManager.newAnimation(name, image, grid, frames, originX, origi
 		grid = grid,
 		frames = frames,
 		currentFrameIndex = 1,
-		originX = _originX,
-		originY = _originY,
+		originPoint = vector.newVector2(_originX, _originY),
 		interval = _interval,
 		loop = _loop,
 		timer = 0,
