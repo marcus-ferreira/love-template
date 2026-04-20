@@ -124,8 +124,7 @@ end
 ---Gets the magnitude of the vector.
 ---@return number magnitude The magnitude of the vector.
 function Vector2:magnitude()
-	local selfSq = self:lenSq()
-	return math.sqrt(selfSq.x + selfSq.y)
+	return math.sqrt(self:lenSq())
 end
 
 ---Gets the normalized version of the vector.
