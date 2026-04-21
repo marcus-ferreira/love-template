@@ -14,14 +14,18 @@ local stateManager = {}
 ---@field private states State[] The states of the state manager.
 ---@field private currentState State|nil The current state of the state manager.
 ---@field private __index? table The index of the state manager (for iterating).
+---@field private __class? string The class of the state manager.
 local StateManager = {}
 StateManager.__index = StateManager
+StateManager.__class = "StateManager"
 
 ---@class State
 ---@field private name string The name of the state.
 ---@field private __index? table The index of the state (for iterating).
+---@field private __class? string The class of the state.
 local State = {}
 State.__index = State
+State.__class = "State"
 
 
 --- Methods

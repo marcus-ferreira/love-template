@@ -26,15 +26,19 @@ local animationState = {
 ---@field private animations Animation[] The animations of the animation manager.
 ---@field private currentAnimation Animation|nil The current animation of the animation manager.
 ---@field private __index? table The index of the animation manager (for iterating).
+---@field private __class? string The class of the animation manager.
 local AnimationManager = {}
 AnimationManager.__index = AnimationManager
+AnimationManager.__class = "AnimationManager"
 
 ---@class Grid
 ---@field private tileSize Vector2 The size vector of each tile.
 ---@field private quads love.Quad[] A table of the quads created by newGrid.
 ---@field private __index? table The index of the grid (for iterating).
+---@field private __class? string The class of the grid.
 local Grid = {}
 Grid.__index = Grid
+Grid.__class = "Grid"
 
 ---@class Animation
 ---@field private name string The name of the animation.
@@ -48,8 +52,10 @@ Grid.__index = Grid
 ---@field private timer number The timer used to track the time between frame changes.
 ---@field private currentState animationState The current state of the animation (PLAYING or STOPPED).
 ---@field private __index? table The index of the animation (for iterating).
+---@field private __class? string The class of the animation.
 local Animation = {}
 Animation.__index = Animation
+Animation.__class = "Animation"
 
 
 --- Methods

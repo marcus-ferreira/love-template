@@ -14,8 +14,10 @@ local vector = {}
 ---@field private x number The X component of the vector.
 ---@field private y number The Y component of the vector.
 ---@field private __index? table The index of the vector (for iterating).
+---@field private __class? string The class of the vector.
 local Vector2 = {}
 Vector2.__index = Vector2
+Vector2.__class = "Vector2"
 
 
 --- Methods

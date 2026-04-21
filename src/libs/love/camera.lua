@@ -20,8 +20,10 @@ local camera = {}
 ---@field private rotation number The rotation of the camera.
 ---@field private followSpeed number The speed at which the camera follows a target.
 ---@field private __index? table The index of the camera (for iterating).
+---@field private __class? string The class of the camera.
 local Camera = {}
 Camera.__index = Camera
+Camera.__class = "Camera"
 
 
 --- Methods
