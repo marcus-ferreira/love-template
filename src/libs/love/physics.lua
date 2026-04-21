@@ -14,36 +14,40 @@ local physics = {}
 
 
 --- Classes
----@class (exact) World
+---@class World
 ---@field private world love.World The world.
----@field private colliders CircleCollider[]|RectangleCollider[] The colliders of the world.
+---@field private colliders (CircleCollider|RectangleCollider)[] The colliders of the world.
 ---@field private __index? table The index of the world (for iterating).
 local World = {}
 World.__index = World
+World.__class = "World"
 
----@class (exact) Collider
----@field private body love.Body The body of the Collider.
----@field private shape love.CircleShape|love.PolygonShape The shape of the Collider.
----@field private fixture love.Fixture The fixture of the Collider.
+---@class Collider
+---@field protected body love.Body The body of the Collider.
+---@field protected shape love.Shape The shape of the Collider.
+---@field protected fixture love.Fixture The fixture of the Collider.
 ---@field private __index? table The index of the Collider (for iterating).
 local Collider = {}
 Collider.__index = Collider
+Collider.__class = "Collider"
 
----@class (exact) CircleCollider : Collider
+---@class CircleCollider : Collider
 ---@field private body love.Body The body of the CircleCollider.
 ---@field private shape love.CircleShape The shape of the CircleCollider.
 ---@field private fixture love.Fixture The fixture of the CircleCollider.
 ---@field private __index? table The index of the CircleCollider (for iterating).
 local CircleCollider = setmetatable({}, Collider)
 CircleCollider.__index = CircleCollider
+CircleCollider.__class = "CircleCollider"
 
----@class (exact) RectangleCollider : Collider
+---@class RectangleCollider : Collider
 ---@field private body love.Body The physics body of the RectangleCollider.
 ---@field private shape love.PolygonShape The shape of the RectangleCollider.
 ---@field private fixture love.Fixture The fixture of the RectangleCollider.
 ---@field private __index? table The index of the RectangleCollider (for iterating).
 local RectangleCollider = setmetatable({}, Collider)
 RectangleCollider.__index = RectangleCollider
+RectangleCollider.__class = "RectangleCollider"
 
 
 --- Methods
@@ -145,7 +149,7 @@ function World:getCollider(index)
 end
 
 ---Gets the colliders of the world.
----@return CircleCollider[]|RectangleCollider[] colliders The table of colliders of the world.
+---@return (CircleCollider|RectangleCollider)[] colliders The table of colliders of the world.
 function World:getColliders()
     return self.colliders
 end
@@ -191,6 +195,10 @@ end
 ---Draws the CircleCollider.
 function CircleCollider:draw()
     love.graphics.circle("line", self.body:getX(), self.body:getY(), self.shape:getRadius())
+end
+
+function CircleCollider:test()
+    
 end
 
 ---Draws the RectangleCollider.

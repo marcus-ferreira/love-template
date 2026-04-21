@@ -10,7 +10,7 @@ local vector = {}
 
 
 --- Classes
----@class (exact) Vector2
+---@class Vector2
 ---@field private x number The X component of the vector.
 ---@field private y number The Y component of the vector.
 ---@field private __index? table The index of the vector (for iterating).

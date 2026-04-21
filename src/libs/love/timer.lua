@@ -19,7 +19,7 @@ local timerState = {
 
 
 --- Classes
----@class (exact) Timer
+---@class Timer
 ---@field private time number The time of the timer in seconds.
 ---@field private currentState number The current state of the timer.
 ---@field private __index? table The index of the timer (for iterating).

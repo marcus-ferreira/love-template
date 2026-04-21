@@ -22,21 +22,21 @@ local animationState = {
 
 
 --- Classes
----@class (exact) AnimationManager
+---@class AnimationManager
 ---@field private animations Animation[] The animations of the animation manager.
 ---@field private currentAnimation Animation|nil The current animation of the animation manager.
 ---@field private __index? table The index of the animation manager (for iterating).
 local AnimationManager = {}
 AnimationManager.__index = AnimationManager
 
----@class (exact) Grid
+---@class Grid
 ---@field private tileSize Vector2 The size vector of each tile.
 ---@field private quads love.Quad[] A table of the quads created by newGrid.
 ---@field private __index? table The index of the grid (for iterating).
 local Grid = {}
 Grid.__index = Grid
 
----@class (exact) Animation
+---@class Animation
 ---@field private name string The name of the animation.
 ---@field private image love.Image The image to be used.
 ---@field private grid Grid The grid of quads created by newGrid.

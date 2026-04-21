@@ -14,7 +14,7 @@ local camera = {}
 
 
 --- Classes
----@class (exact) Camera
+---@class Camera
 ---@field private position Vector2 The position vector of the camera.
 ---@field private scale number The scale of the camera.
 ---@field private rotation number The rotation of the camera.
