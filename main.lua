@@ -23,29 +23,43 @@ function love.load()
     }
 
     player = {
-        animationManager = animationManager.newAnimationManager()
+        animationManager = animationManager.newAnimationManager(),
+        stateManager = stateManager.newStateManager()
     }
 
-    player.animationManager:addAnimation("idle", playerSpritesheet, playerGrids[1], { 1 })
-    player.animationManager:addAnimation("attack", playerSpritesheet, playerGrids[2], { 1, 2, 3, 4, 5 }, 0, 0, 0.07)
+    player.animationManager:addAnimations(
+        {
+            { "idle",   playerSpritesheet, playerGrids[1], { 1 } },
+            { "attack", playerSpritesheet, playerGrids[2], { 1, 2, 3, 4, 5 }, 0, 0, 0.07 }
+        }
+    )
     player.animationManager:getAnimation("idle"):setOriginPoint(16, 32)
     player.animationManager:getAnimation("attack"):setOriginPoint(16, 40)
 
+    player.stateManager:addStates(
+        {
+            {
+                "idle",
+                function()
+                    player.animationManager:changeAnimation("idle")
+                end
+            },
+            {
+                "attack",
+                function()
+                    player.animationManager:changeAnimation("attack")
+                end,
+                function()
+                    if player.animationManager:getCurrentAnimation():isEnded() then
+                        player.stateManager:changeState("idle")
+                    end
+                end
+            }
+        }
+    )
+
 
     -- player = entity.newEntity(50, 50, 32, 32)
-    -- player:addState("idle", function()
-    --     player:changeAnimation("idle")
-    -- end)
-    -- player:addState("attack",
-    --     function()
-    --         player:changeAnimation("attack")
-    --     end,
-    --     function()
-    --         if player:getAnimationManager():getCurrentAnimation():isEnded() then
-    --             player:getStateManager():changeState("idle")
-    --         end
-    --     end
-    -- )
 
     -- local playerColliderPosition = player:getCollider():getPosition()
     -- local playerColliderWidth, playerColliderHeight = player:getCollider():getSize()
@@ -57,6 +71,7 @@ end
 
 function love.update(dt)
     player.animationManager:update(dt)
+    player.stateManager:update(dt)
 
     -- local vx, vy = 0, 0
     -- local playerSpeed = 60
@@ -77,7 +92,7 @@ function love.draw()
     love.graphics.scale(WindowScale, WindowScale)
 
     player.animationManager:draw(100, 100)
-
+    player.stateManager:draw()
 
 
     -- player:draw()
@@ -98,6 +113,8 @@ function love.keypressed(key)
         love.event.quit()
     end
 
-    if key == "kp1" then player.animationManager:changeAnimation("idle") end
-    if key == "kp2" then player.animationManager:changeAnimation("attack") end
+    -- if key == "kp1" then player.animationManager:changeAnimation("idle") end
+    -- if key == "kp2" then player.animationManager:changeAnimation("attack") end
+    if key == "kp1" then player.stateManager:changeState("idle") end
+    if key == "kp2" then player.stateManager:changeState("attack") end
 end

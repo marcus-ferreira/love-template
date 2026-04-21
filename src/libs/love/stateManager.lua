@@ -80,6 +80,19 @@ function StateManager:addState(name, enter, update, draw, exit)
 	end
 end
 
+---Adds a batch of states to the state manager.
+---@param states table[] The table of states parameters.
+function StateManager:addStates(states)
+	for _, state in ipairs(states) do
+		local name   = state[1]
+		local enter  = state[2]
+		local update = state[3]
+		local draw   = state[4]
+		local exit   = state[5]
+		self:addState(name, enter, update, draw, exit)
+	end
+end
+
 ---Changes the current state of the state manager.
 ---@param name string The name of the state to change to.
 ---@param ... any The enter parameters of the state.
