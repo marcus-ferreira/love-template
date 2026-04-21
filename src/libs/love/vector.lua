@@ -10,7 +10,7 @@ local vector = {}
 
 
 --- Classes
----@class Vector2
+---@class (exact) Vector2
 ---@field private x number The X component of the vector.
 ---@field private y number The Y component of the vector.
 ---@field private __index? table The index of the vector (for iterating).
@@ -24,10 +24,13 @@ Vector2.__index = Vector2
 ---@param y? number The Y component of the vector.
 ---@return Vector2 vector2 A new Vector2 object.
 function vector.newVector2(x, y)
-	---@class Vector2
+	local _x = x or 0
+	local _y = y or 0
+
+	---@type Vector2
 	local self = {
-		x = x or 0,
-		y = y or 0
+		x = _x,
+		y = _y
 	}
 	setmetatable(self, Vector2)
 	return self

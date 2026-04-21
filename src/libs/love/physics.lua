@@ -14,14 +14,14 @@ local physics = {}
 
 
 --- Classes
----@class World
+---@class (exact) World
 ---@field private world love.World The world.
 ---@field private colliders CircleCollider[]|RectangleCollider[] The colliders of the world.
 ---@field private __index? table The index of the world (for iterating).
 local World = {}
 World.__index = World
 
----@class Collider
+---@class (exact) Collider
 ---@field private body love.Body The body of the Collider.
 ---@field private shape love.CircleShape|love.PolygonShape The shape of the Collider.
 ---@field private fixture love.Fixture The fixture of the Collider.
@@ -29,7 +29,7 @@ World.__index = World
 local Collider = {}
 Collider.__index = Collider
 
----@class CircleCollider : Collider
+---@class (exact) CircleCollider : Collider
 ---@field private body love.Body The body of the CircleCollider.
 ---@field private shape love.CircleShape The shape of the CircleCollider.
 ---@field private fixture love.Fixture The fixture of the CircleCollider.
@@ -37,7 +37,7 @@ Collider.__index = Collider
 local CircleCollider = setmetatable({}, Collider)
 CircleCollider.__index = CircleCollider
 
----@class RectangleCollider : Collider
+---@class (exact) RectangleCollider : Collider
 ---@field private body love.Body The physics body of the RectangleCollider.
 ---@field private shape love.PolygonShape The shape of the RectangleCollider.
 ---@field private fixture love.Fixture The fixture of the RectangleCollider.
@@ -78,11 +78,9 @@ function physics.newCircleCollider(world, x, y, radius, type)
 
     ---@type CircleCollider
     local self = {
-        position = vector.newVector2(x, y),
-        velocity = vector.newVector2(),
         body = body,
         shape = shape,
-        fixture = fixture
+        fixture = fixture,
     }
     setmetatable(self, CircleCollider)
     return self
@@ -105,9 +103,6 @@ function physics.newRectangleCollider(world, x, y, width, height, type)
 
     ---@type RectangleCollider
     local self = {
-        position = vector.newVector2(x, y),
-        size = vector.newVector2(width, height),
-        velocity = vector.newVector2(),
         body = body,
         shape = shape,
         fixture = fixture

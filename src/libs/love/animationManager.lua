@@ -22,30 +22,29 @@ local animationState = {
 
 
 --- Classes
----@class AnimationManager
+---@class (exact) AnimationManager
 ---@field private animations Animation[] The animations of the animation manager.
 ---@field private currentAnimation Animation|nil The current animation of the animation manager.
 ---@field private __index? table The index of the animation manager (for iterating).
 local AnimationManager = {}
 AnimationManager.__index = AnimationManager
 
----@class Grid
----@field private tileWidth number The width of each tile.
----@field private tileHeight number The height of each tile.
+---@class (exact) Grid
+---@field private tileSize Vector2 The size vector of each tile.
 ---@field private quads love.Quad[] A table of the quads created by newGrid.
 ---@field private __index? table The index of the grid (for iterating).
 local Grid = {}
 Grid.__index = Grid
 
----@class Animation
+---@class (exact) Animation
 ---@field private name string The name of the animation.
 ---@field private image love.Image The image to be used.
 ---@field private grid Grid The grid of quads created by newGrid.
 ---@field private frames number[] A table of the numbers of the quads in order.
 ---@field private currentFrameIndex number The index of the current frame in the frames table.
----@field private originPoint? Vector2 The origin point vector for drawing.
----@field private interval? number The interval between frame quads, in seconds.
----@field private loop? boolean True if the animation should be looped or false if contrary.
+---@field private originPoint Vector2 The origin point vector for drawing.
+---@field private interval number The interval between frame quads, in seconds.
+---@field private loop boolean True if the animation should be looped or false if contrary.
 ---@field private timer number The timer used to track the time between frame changes.
 ---@field private currentState animationState The current state of the animation (PLAYING or STOPPED).
 ---@field private __index? table The index of the animation (for iterating).
@@ -85,8 +84,7 @@ function animationManager.newGrid(image, tileWidth, tileHeight, columns, rows, l
 
 	---@type Grid
 	local self = {
-		tileWidth = tileWidth,
-		tileHeight = tileHeight,
+		tileSize = vector.newVector2(tileWidth, tileHeight),
 		quads = {}
 	}
 	setmetatable(self, Grid)
@@ -203,10 +201,9 @@ function Grid:addQuad(quad)
 end
 
 ---Gets the tile size of the grid.
----@return number tileWidth The width of a tile of the grid.
----@return number tileHeight The height of a tile of the grid.
+---@return Vector2 tileSize The size vector of a tile of the grid.
 function Grid:getTileSize()
-	return self.tileWidth, self.tileHeight
+	return self.tileSize
 end
 
 ---Gets the quad at the specified index in the grid.
@@ -230,23 +227,22 @@ function Animation:draw(x, y, rotation, sx, sy)
 		rotation or 0,                       -- rotation
 		sx or 1,                             -- scaleX
 		sy or 1,                             -- scaleY
-		self.originX,                        -- originX
-		self.originY                         -- originY
+		self.originPoint:getX(),             -- originX
+		self.originPoint:getY()              -- originY
 	)
 end
 
 ---Draws the origin point of the animation.
----@param x number The X position of the origin point.
----@param y number The Y position of the origin point.
+---@param x number The X relative position of the origin point.
+---@param y number The Y relative position of the origin point.
 function Animation:drawOriginPoint(x, y)
 	love.graphics.circle("fill", x, y, 3)
 end
 
 ---Gets the origin point of the animation.
----@return number originX The X position of the origin point of the animation.
----@return number originY The Y position of the origin point of the animation.
+---@return Vector2 originPoint The position vector of the origin point of the animation.
 function Animation:getOriginPoint()
-	return self.originX, self.originY
+	return self.originPoint
 end
 
 ---Goes to the specified frame index of the animation.
@@ -294,10 +290,10 @@ end
 ---@param x number The new X position of the origin point.
 ---@param y number The new Y position of the origin point.
 function Animation:setOriginPoint(x, y)
-	local tileWidth, tileHeight = self.grid:getTileSize()
-	assert((x >= 0 and x <= tileWidth) and (y >= 0 and y <= tileHeight), "Origin point outside animation bounds.")
-	self.originX = x
-	self.originY = y
+	local tileSize = self.grid:getTileSize()
+	assert((x >= 0 and x <= tileSize:getX()) and (y >= 0 and y <= tileSize:getY()),
+		"Origin point outside animation bounds.")
+	self.originPoint:setCoordinates(x, y)
 end
 
 ---Stops the animation.
