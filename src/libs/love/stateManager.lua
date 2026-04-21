@@ -124,11 +124,15 @@ function StateManager:update(dt)
 	end
 end
 
+---Calls the draw function of the state.
+function State:draw(...) end
+
 ---Calls the enter function of the state.
 ---@param ... any The enter parameters of the state.
-function State:enter(...)
-	self:enter(...)
-end
+function State:enter(...) end
+
+---Calls the exit function of the state.
+function State:exit() end
 
 ---Gets the name of the state.
 ---@return string name The name of the state.
@@ -147,18 +151,6 @@ end
 
 ---Calls the update function of the state.
 ---@param dt number The delta time.
-function State:update(dt)
-	self:update(dt)
-end
-
----Calls the draw function of the state.
-function State:draw(...)
-	self:draw(...)
-end
-
----Calls the exit function of the state.
-function State:exit()
-	self:exit()
-end
+function State:update(dt) end
 
 return stateManager
