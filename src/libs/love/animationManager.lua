@@ -120,9 +120,9 @@ end
 ---@param loop? boolean True if the animation should be looped or false if contrary. Default = false.
 ---@return Animation animation The new Animation object.
 function animationManager.newAnimation(name, image, grid, frames, originX, originY, interval, loop)
-	local tileWidth, tileHeight = grid:getTileSize()
-	local _originX = originX or tileWidth / 2
-	local _originY = originY or tileHeight / 2
+	local tileSize = grid:getTileSize()
+	local _originX = originX or tileSize:getX() / 2
+	local _originY = originY or tileSize:getY() / 2
 	local _interval = interval or 1
 	local _loop = loop or false
 
@@ -188,6 +188,12 @@ function AnimationManager:getAnimation(name)
 	return self.animations[name]
 end
 
+---Gets the animations of the AnimationManager.
+---@return Animation[] animations The list of animations.
+function AnimationManager:getAnimations()
+	return self.animations
+end
+
 ---Gets the current animation of the animation manager.
 ---@return Animation|nil animation The current animation of the animation manager.
 function AnimationManager:getCurrentAnimation()
@@ -197,7 +203,9 @@ end
 ---Updates the current animation of the animation manager.
 ---@param dt number The delta time.
 function AnimationManager:update(dt)
-	self.currentAnimation:update(dt)
+	if self.currentAnimation then
+		self.currentAnimation:update(dt)
+	end
 end
 
 ---Adds a quad to the grid.
@@ -216,6 +224,12 @@ end
 ---@return love.Quad quad The quad at the specified index.
 function Grid:getQuad(index)
 	return self.quads[index]
+end
+
+---Gets the quads of the Grid.
+---@return love.Quad[] quads The list of quads.
+function Grid:getQuads()
+	return self.quads
 end
 
 ---Draws the current frame of the animation. Should be called in love.draw.
@@ -245,17 +259,76 @@ function Animation:drawOriginPoint(x, y)
 	love.graphics.circle("fill", x, y, 3)
 end
 
+---Gets the current frame index of the Animation.
+---@return number currentFrameIndex The current frame index of the Animation.
+function Animation:getCurrentFrameIndex()
+	return self.currentFrameIndex
+end
+
+---Gets the frames of the Animation.
+---@return number[] frames The frames of the Animation.
+function Animation:getFrames()
+	return self.frames
+end
+
+---Gets the grid of the Animation.
+---@return Grid grid The Grid of the Animation.
+function Animation:getGrid()
+	return self.grid
+end
+
+---Gets the image of the animation.
+---@return love.Image image The image of the animation.
+function Animation:getImage()
+	return self.image
+end
+
+---Gets the interval of the Animation.
+---@return number interval The interval of the Animation.
+function Animation:getInterval()
+	return self.interval
+end
+
+---Gets if the Animation loops or not.
+---@return boolean loops If the Animation loops or not.
+function Animation:loops()
+	return self.loop
+end
+
+---Gets the name of the Animation.
+---@return string name The name of the Animation.
+function Animation:getName()
+	return self.name
+end
+
 ---Gets the origin point of the animation.
 ---@return Vector2 originPoint The position vector of the origin point of the animation.
 function Animation:getOriginPoint()
 	return self.originPoint
 end
 
+---Gets the timer of the Animation.
+---@return number timer The timer of the Animation.
+function Animation:getTimer()
+	return self.timer
+end
+
 ---Goes to the specified frame index of the animation.
----@param frameIndex number The index of the frame to go.
-function Animation:goToFrame(frameIndex)
-	self.currentFrameIndex = frameIndex
+---@param index number The index of the frame to go.
+function Animation:goToFrame(index)
+	assert(index > 0 and index <= #self.frames, "Frame does not exists in the animation.")
+	self.currentFrameIndex = index
 	self.timer = 0
+end
+
+---Goes to the next frame or goes back to the first frame of the animation.
+function Animation:goToNextFrame()
+	if self.currentFrameIndex == #self.frames then
+		self.currentFrameIndex = 1
+	else
+		self.currentFrameIndex = self.currentFrameIndex + 1
+	end
+	self.timer = self.timer - self.interval
 end
 
 ---Checks if the animation has ended.
@@ -272,7 +345,7 @@ end
 
 ---Starts playing the animation.
 function Animation:play()
-	self.currentFrameIndex = 1
+	self:goToFrame(1)
 	self.currentState = animationState.PLAYING
 end
 
@@ -283,12 +356,13 @@ end
 
 ---Rewinds the animation to the first frame.
 function Animation:rewind()
-	self.currentFrameIndex = 1
+	self:goToFrame(1)
 end
 
 ---Sets whether the animation should loop or not.
 ---@param loop boolean True if the animation should loop or false if contrary.
 function Animation:setLoop(loop)
+	assert(type(loop) == "boolean", "loop must be true or false")
 	self.loop = loop
 end
 
@@ -300,6 +374,12 @@ function Animation:setOriginPoint(x, y)
 	assert((x >= 0 and x <= tileSize:getX()) and (y >= 0 and y <= tileSize:getY()),
 		"Origin point outside animation bounds.")
 	self.originPoint:setCoordinates(x, y)
+end
+
+---Sets the timer of the animation.
+---@param value number The timer of the animation.
+function Animation:setTimer(value)
+	self.timer = value
 end
 
 ---Stops the animation.
@@ -316,18 +396,16 @@ function Animation:update(dt)
 	if self:isPlaying() then
 		self.timer = self.timer + dt
 
-		-- Changes to next frame and reset timer
+		-- Changes to next frame
 		if self.timer > self.interval then
-			self.currentFrameIndex = self.currentFrameIndex + 1
-			self.timer = self.timer - self.interval
+			self:goToNextFrame()
 		end
 
 		-- Goes back to first frame if is looping or stop
-		if self.currentFrameIndex > #self.frames then
+		if self:isEnded() then
 			if self.loop then
-				self.currentFrameIndex = 1
+				self:goToNextFrame()
 			else
-				self.currentFrameIndex = #self.frames
 				self:stop()
 			end
 		end

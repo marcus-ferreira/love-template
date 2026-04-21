@@ -95,9 +95,10 @@ function StateManager:changeState(name, ...)
 end
 
 ---Draws the current state of the state manager.
-function StateManager:draw()
+---@param ... any The draw parameters of the state.
+function StateManager:draw(...)
 	if self.currentState.draw then
-		self.currentState:draw()
+		self.currentState:draw(...)
 	end
 end
 
@@ -151,8 +152,8 @@ function State:update(dt)
 end
 
 ---Calls the draw function of the state.
-function State:draw()
-	self:draw()
+function State:draw(...)
+	self:draw(...)
 end
 
 ---Calls the exit function of the state.
