@@ -25,6 +25,7 @@ local animationState = {
 ---@class AnimationManager
 ---@field private animations Animation[] The animations of the animation manager.
 ---@field private currentAnimation Animation|nil The current animation of the animation manager.
+---@field private flip boolean The flip state of the animations. True if are flipped or false otherwise.
 ---@field private __index? table The index of the animation manager (for iterating).
 ---@field private __class? string The class of the animation manager.
 local AnimationManager = {}
@@ -65,7 +66,8 @@ function animationManager.newAnimationManager()
 	---@type AnimationManager
 	local self = {
 		animations = {},
-		currentAnimation = nil
+		currentAnimation = nil,
+		flip = false
 	}
 	setmetatable(self, AnimationManager)
 	return self
@@ -188,11 +190,11 @@ end
 ---@param x number The X position of the animation.
 ---@param y number The Y position of the animation.
 ---@param rotation? number The rotation value of the animation.
----@param sx? number The scaleX of the animation.
 ---@param sy? number The scaleY of the animation.
-function AnimationManager:draw(x, y, rotation, sx, sy)
+function AnimationManager:draw(x, y, rotation, sy)
 	if self.currentAnimation then
-		self.currentAnimation:draw(x, y, rotation, sx, sy)
+		local _sx = self.flip == false and 1 or -1
+		self.currentAnimation:draw(x, y, rotation, _sx, sy)
 	end
 end
 
@@ -214,6 +216,18 @@ end
 ---@return Animation|nil animation The current animation of the animation manager.
 function AnimationManager:getCurrentAnimation()
 	return self.currentAnimation
+end
+
+---Gets the flip state of the animations.
+---@return boolean flip The flip state.
+function AnimationManager:getFlip()
+	return self.flip
+end
+
+---Sets the flip state of the animations.
+---@param flip boolean The flip state.
+function AnimationManager:setFlip(flip)
+	self.flip = flip
 end
 
 ---Updates the current animation of the animation manager.
@@ -255,14 +269,17 @@ end
 ---@param sx? number The scaleX of the animation.
 ---@param sy? number The scaleY of the animation.
 function Animation:draw(x, y, rotation, sx, sy)
+	local _rotation = rotation or 0
+	local _sx = sx or 1
+	local _sy = sy or 1
 	love.graphics.draw(
 		self.image,                          -- image
 		self.grid:getQuad(self.currentFrameIndex), -- quad
 		x,                                   -- x
 		y,                                   -- y
-		rotation or 0,                       -- rotation
-		sx or 1,                             -- scaleX
-		sy or 1,                             -- scaleY
+		_rotation,                           -- rotation
+		_sx,                                 -- scaleX
+		_sy,                                 -- scaleY
 		self.originPoint:getX(),             -- originX
 		self.originPoint:getY()              -- originY
 	)
@@ -272,7 +289,7 @@ end
 ---@param x number The X relative position of the origin point.
 ---@param y number The Y relative position of the origin point.
 function Animation:drawOriginPoint(x, y)
-	love.graphics.circle("fill", x, y, 3)
+	love.graphics.circle("fill", x, y, 2)
 end
 
 ---Gets the current frame index of the Animation.
@@ -406,10 +423,7 @@ end
 ---Updates the animation. Should be called in love.update.
 ---@param dt number The delta time.
 function Animation:update(dt)
-	-- Don't update if there's only 1 frame
-	if #self.frames == 1 then return end
-
-	if self:isPlaying() then
+	if self:isPlaying() and #self.frames ~= 1 then
 		self.timer = self.timer + dt
 
 		-- Changes to next frame
