@@ -78,11 +78,8 @@ end
 ---@param name string The name of the variable of the entity.
 ---@return any value The value of the variable of the entity.
 function Entity:getVariable(name)
-    for _name, value in pairs(self.variables) do
-        if name == _name then
-            return value
-        end
-    end
+    assert(self.variables[name], "Variable with name '" .. name .. "' does not exists.")
+    return self.variables[name]
 end
 
 ---Gets the variables of the entity.
