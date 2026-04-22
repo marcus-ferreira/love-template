@@ -18,6 +18,7 @@ local physics = {}
 ---@field private world love.World The world.
 ---@field private colliders (CircleCollider|RectangleCollider)[] The colliders of the world.
 ---@field private __index? table The index of the world (for iterating).
+---@field private __class? string The class of the world.
 local World = {}
 World.__index = World
 World.__class = "World"
@@ -27,6 +28,7 @@ World.__class = "World"
 ---@field protected shape love.CircleShape|love.PolygonShape The shape of the Collider.
 ---@field protected fixture love.Fixture The fixture of the Collider.
 ---@field private __index? table The index of the Collider (for iterating).
+---@field private __class? string The class of the Collider.
 local Collider = {}
 Collider.__index = Collider
 Collider.__class = "Collider"
@@ -36,6 +38,7 @@ Collider.__class = "Collider"
 ---@field protected shape love.CircleShape The shape of the CircleCollider.
 ---@field protected fixture love.Fixture The fixture of the CircleCollider.
 ---@field private __index? table The index of the CircleCollider (for iterating).
+---@field private __class? string The class of the CircleCollider.
 local CircleCollider = setmetatable({}, Collider)
 CircleCollider.__index = CircleCollider
 CircleCollider.__class = "CircleCollider"
@@ -45,6 +48,7 @@ CircleCollider.__class = "CircleCollider"
 ---@field protected shape love.PolygonShape The shape of the RectangleCollider.
 ---@field protected fixture love.Fixture The fixture of the RectangleCollider.
 ---@field private __index? table The index of the RectangleCollider (for iterating).
+---@field private __class? string The class of the RectangleCollider.
 local RectangleCollider = setmetatable({}, Collider)
 RectangleCollider.__index = RectangleCollider
 RectangleCollider.__class = "RectangleCollider"
