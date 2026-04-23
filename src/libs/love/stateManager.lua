@@ -110,7 +110,7 @@ end
 ---Draws the current state of the state manager.
 ---@param ... any The draw parameters of the state.
 function StateManager:draw(...)
-	if self.currentState.draw then
+	if self.currentState and self.currentState.draw then
 		self.currentState:draw(...)
 	end
 end
@@ -132,7 +132,7 @@ end
 ---Updates the current state of the state manager.
 ---@param dt number The delta time.
 function StateManager:update(dt)
-	if self.currentState.update then
+	if self.currentState and self.currentState.update then
 		self.currentState:update(dt)
 	end
 end
