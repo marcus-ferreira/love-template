@@ -14,7 +14,9 @@ function love.load()
     -- Initializes the game settings
     love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setNewFont("assets/fonts/love.ttf", 8)
+    love.keyboard.keysPressed = {}
     ResizeWindow(2)
+
 
     playerSpritesheet = love.graphics.newImage("assets/images/ivysaur.png")
     playerGrids = {
@@ -23,18 +25,15 @@ function love.load()
     }
 
     world = physics.newWorld()
-
     player = entity.newEntity(world, 50, 50, 32, 32)
+    block = entity.newEntity(world, 200, 50, 32, 60)
 
     player:getAnimationManager():addAnimations(
         {
             { "idle",   playerSpritesheet, playerGrids[1], { 1 } },
-            { "attack", playerSpritesheet, playerGrids[2], { 1, 2, 3, 4, 5 }, 0, 0, 0.07 }
+            { "attack", playerSpritesheet, playerGrids[2], { 1, 2, 3, 4, 5 }, 16, 24, 0.07 }
         }
     )
-    -- player:getAnimationManager():getAnimation("idle"):setOriginPoint(16, 32)
-    -- player:getAnimationManager():getAnimation("attack"):setOriginPoint(16, 40)
-    player:getAnimationManager():getAnimation("attack"):setOriginPoint(16, 24)
 
     player:getStateManager():addStates(
         {
@@ -44,7 +43,7 @@ function love.load()
                     player:getAnimationManager():changeAnimation("idle")
                 end,
                 function()
-                    if love.keyboard.isDown("space") then
+                    if love.keyboard.wasPressed("space") then
                         player:getStateManager():changeState("attack")
                     end
                 end
@@ -62,8 +61,6 @@ function love.load()
             }
         }
     )
-
-    block = entity.newEntity(world, 200, 50, 32, 60)
 end
 
 function love.update(dt)
@@ -85,19 +82,14 @@ function love.update(dt)
         vy = playerSpeed
     end
     player:move(vx, vy, playerSpeed, dt)
+
+    love.keyboard.keysPressed = {}
 end
 
 function love.draw()
     love.graphics.scale(WindowScale, WindowScale)
-    player:draw()
-    player:getCollider():draw()
-
-    local x, y = player:getCollider():getBody():getPosition()
-    player:getAnimationManager():getCurrentAnimation():drawOriginPoint(x, y)
-
-
-
-    -- block:getCollider():draw()
+    player:drawAll()
+    block:drawAll()
 
     -- Debug
     -- love.graphics.print("currentState: " .. player:getStateManager():getCurrentState():getName(), 0, 0)
@@ -111,5 +103,12 @@ function love.keypressed(key)
         love.event.quit()
     end
 
-    if key == "space" then player:getStateManager():changeState("attack") end
+    love.keyboard.keysPressed[key] = true
+end
+
+---Checks is a given key was pressed in the last frame.
+---@param key love.KeyConstant The key to be checked.
+---@return boolean key The key.
+function love.keyboard.wasPressed(key)
+    return love.keyboard.keysPressed[key] or false
 end
