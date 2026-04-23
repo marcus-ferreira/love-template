@@ -42,6 +42,11 @@ function love.load()
                 "idle",
                 function()
                     player:getAnimationManager():changeAnimation("idle")
+                end,
+                function()
+                    if love.keyboard.isDown("space") then
+                        player:getStateManager():changeState("attack")
+                    end
                 end
             },
             {
@@ -58,12 +63,7 @@ function love.load()
         }
     )
 
-    -- local playerColliderPosition = player:getCollider():getPosition()
-    -- local playerColliderWidth, playerColliderHeight = player:getCollider():getSize()
-    -- player:getCollider():setPosition(vector.newVector2(playerColliderPosition:getX() - (playerColliderWidth / 2),
-    -- playerColliderPosition:getY() - playerColliderHeight))
-
-    -- block = entity.newEntity(200, 50, 32, 60)
+    block = entity.newEntity(world, 200, 50, 32, 60)
 end
 
 function love.update(dt)
@@ -71,11 +71,13 @@ function love.update(dt)
     player:update(dt)
 
     local vx, vy = 0, 0
-    local playerSpeed = 60
+    local playerSpeed = 100
     if love.keyboard.isDown("left") then
         vx = -playerSpeed
+        player:getAnimationManager():flipAnimationsHorizontally(true)
     elseif love.keyboard.isDown("right") then
         vx = playerSpeed
+        player:getAnimationManager():flipAnimationsHorizontally(false)
     end
     if love.keyboard.isDown("up") then
         vy = -playerSpeed
@@ -109,13 +111,5 @@ function love.keypressed(key)
         love.event.quit()
     end
 
-    -- if key == "kp1" then player.animationManager:changeAnimation("idle") end
-    -- if key == "kp2" then player.animationManager:changeAnimation("attack") end
-    if key == "kp1" then player:getStateManager():changeState("idle") end
-    if key == "kp2" then player:getStateManager():changeState("attack") end
-    if key == "kp0" then player:setVariable("position", 2) end
-
-    -- if key == "kp4" then player:getAnimationManager():getCurrentAnimation():setOriginPoint(0, 16) end
-    -- if key == "kp5" then player:getAnimationManager():getCurrentAnimation():setOriginPoint(16, 16) end
-    -- if key == "kp6" then player:getAnimationManager():getCurrentAnimation():setOriginPoint(16, 32) end
+    if key == "space" then player:getStateManager():changeState("attack") end
 end

@@ -25,7 +25,9 @@ local animationState = {
 ---@class AnimationManager
 ---@field private animations Animation[] The animations of the animation manager.
 ---@field private currentAnimation Animation|nil The current animation of the animation manager.
----@field private flip boolean The flip state of the animations. True if are flipped or false otherwise.
+---@field private rotation number The angle of the animations (in radians).
+---@field private scaleX number The scale x value of the animations. 1 = Normal, -1 = Flipped horizontally.
+---@field private scaleY number The scale y value of the animations. 1 = Normal, -1 = Flipped vertically.
 ---@field private __index? table The index of the animation manager (for iterating).
 ---@field private __class? string The class of the animation manager.
 local AnimationManager = {}
@@ -67,7 +69,9 @@ function animationManager.newAnimationManager()
 	local self = {
 		animations = {},
 		currentAnimation = nil,
-		flip = false
+		rotation = 0,
+		scaleX = 1,
+		scaleY = 1
 	}
 	setmetatable(self, AnimationManager)
 	return self
@@ -189,13 +193,26 @@ end
 ---Draws the current animation of the animation manager.
 ---@param x number The X position of the animation.
 ---@param y number The Y position of the animation.
----@param rotation? number The rotation value of the animation.
----@param sy? number The scaleY of the animation.
-function AnimationManager:draw(x, y, rotation, sy)
+function AnimationManager:draw(x, y)
 	if self.currentAnimation then
-		local _sx = self.flip == false and 1 or -1
-		self.currentAnimation:draw(x, y, rotation, _sx, sy)
+		self.currentAnimation:draw(x, y, self.rotation, self.scaleX, self.scaleY)
 	end
+end
+
+---Shorthand for setting a scale x value -1 (flip horizontally) the animations.
+---@param bool boolean The flip state.
+function AnimationManager:flipAnimationsHorizontally(bool)
+	assert(type(bool) == "boolean", "Value must be true or false")
+	local flipValue = bool == true and -1 or 1
+	self:setScaleX(flipValue)
+end
+
+---Shorthand for setting a scale y value -1 (flip vertically) the animations.
+---@param bool boolean The flip state.
+function AnimationManager:flipAnimationsVertically(bool)
+	assert(type(bool) == "boolean", "Value must be true or false")
+	local flipValue = bool == true and -1 or 1
+	self:setScaleY(flipValue)
 end
 
 ---Gets the animation given its name.
@@ -218,16 +235,40 @@ function AnimationManager:getCurrentAnimation()
 	return self.currentAnimation
 end
 
----Gets the flip state of the animations.
----@return boolean flip The flip state.
-function AnimationManager:getFlip()
-	return self.flip
+---Gets the animation manager rotation.
+---@return number rotation The rotation value of the animation manager.
+function AnimationManager:getRotation()
+	return self.rotation
 end
 
----Sets the flip state of the animations.
----@param flip boolean The flip state.
-function AnimationManager:setFlip(flip)
-	self.flip = flip
+---Gets the animation manager scale x.
+---@return number rotation The scale x value of the animation manager.
+function AnimationManager:getScaleX()
+	return self.scaleX
+end
+
+---Gets the animation manager scale y.
+---@return number rotation The scale y value of the animation manager.
+function AnimationManager:getScaleY()
+	return self.scaleY
+end
+
+---Sets the new rotation value of the animation manager.
+---@param value number The new value of the rotation of the animation manager.
+function AnimationManager:setRotation(value)
+	self.rotation = value
+end
+
+---Sets the new scale x value of the animation manager.
+---@param value number The new value of the scale x of the animation manager.
+function AnimationManager:setScaleX(value)
+	self.scaleX = value
+end
+
+---Sets the new scale y value of the animation manager.
+---@param value number The new value of the scale y of the animation manager.
+function AnimationManager:setScaleY(value)
+	self.scaleY = value
 end
 
 ---Updates the current animation of the animation manager.

@@ -47,13 +47,10 @@ function entity.newEntity(world, x, y, width, height)
 end
 
 ---Draws the entity.
----@param rotation? number The rotation value of the animation.
----@param sx? number The scaleX of the animation.
----@param sy? number The scaleY of the animation.
-function Entity:draw(rotation, sx, sy)
+function Entity:draw()
     local x, y = self.collider:getBody():getPosition()
     self.stateManager:draw()
-    self.animationManager:draw(x, y, rotation, sx, sy)
+    self.animationManager:draw(x, y)
 end
 
 ---Gets the animation manager of the entity.
