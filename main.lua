@@ -25,8 +25,8 @@ function love.load()
     }
 
     world = physics.newWorld()
-    player = entity.newEntity(world, 50, 50, 32, 32)
-    block = entity.newEntity(world, 200, 50, 32, 60)
+    player = entity.newEntity(world, 50, 50, 32, 32, "dynamic")
+    block = entity.newEntity(world, 200, 50, 32, 60, "static")
 
     player:getAnimationManager():addAnimations(
         {
@@ -68,20 +68,20 @@ function love.update(dt)
     player:update(dt)
 
     local vx, vy = 0, 0
-    local playerSpeed = 100
+    local playerForce = 2000
     if love.keyboard.isDown("left") then
-        vx = -playerSpeed
+        vx = -playerForce
         player:getAnimationManager():flipAnimationsHorizontally(true)
     elseif love.keyboard.isDown("right") then
-        vx = playerSpeed
+        vx = playerForce
         player:getAnimationManager():flipAnimationsHorizontally(false)
     end
     if love.keyboard.isDown("up") then
-        vy = -playerSpeed
+        vy = -playerForce
     elseif love.keyboard.isDown("down") then
-        vy = playerSpeed
+        vy = playerForce
     end
-    player:move(vx, vy, playerSpeed, dt)
+    player:move(vx, vy, playerForce)
 
     love.keyboard.keysPressed = {}
 end

@@ -33,13 +33,14 @@ Entity.__index = Entity
 ---@param y number The Y coordinate of the entity.
 ---@param width number The width of the entity.
 ---@param height number The height of the entity.
+---@param type love.BodyType The type of the collider of the entity.
 ---@return Entity entity A new entity object.
-function entity.newEntity(world, x, y, width, height)
+function entity.newEntity(world, x, y, width, height, type)
     ---@type Entity
     local self = {
         stateManager = stateManager.newStateManager(),
         animationManager = animationManager.newAnimationManager(),
-        collider = physics.newRectangleCollider(world:getWorld(), x, y, width, height, "dynamic"),
+        collider = physics.newRectangleCollider(world:getWorld(), x, y, width, height, type),
         variables = {}
     }
     setmetatable(self, Entity)
@@ -96,6 +97,17 @@ function Entity:getVariables()
     return self.variables
 end
 
+---Moves the entity given a speed.
+---@param vx number The horizontal velocity to move the entity.
+---@param vy number The vertical velocity to move the entity.
+---@param force number The force to move the entity.
+function Entity:move(vx, vy, force)
+    if vx == 0 and vy == 0 then return end
+    local direction = vector.newVector2(vx, vy):normalize()
+    local forceVector = direction * force
+    self.collider:getBody():applyForce(forceVector:getX(), forceVector:getY())
+end
+
 ---Sets a new value to a variable.
 ---@param name string The name of the variable.
 ---@param value any The new value of the variable.
@@ -108,19 +120,6 @@ end
 function Entity:update(dt)
     self.stateManager:update(dt)
     self.animationManager:update(dt)
-end
-
----Moves the entity given a speed.
----@param vx number The horizontal velocity to move the entity.
----@param vy number The vertical velocity to move the entity.
----@param speed number The speed to move the entity.
----@param dt? number The delta time
-function Entity:move(vx, vy, speed, dt)
-    local x, y = player:getCollider():getBody():getPosition()
-    local colliderPosition = vector.newVector2(x, y)
-    local colliderVelocity = vector.newVector2(vx, vy)
-    local colliderNewPosition = colliderPosition + (colliderVelocity:normalize() * speed * dt)
-    player:getCollider():getBody():setPosition(colliderNewPosition:getX(), colliderNewPosition:getY())
 end
 
 return entity
