@@ -53,6 +53,17 @@ function Entity:draw()
     self.animationManager:draw(x, y)
 end
 
+---Shorthand to draw everything from the entity (animation, collider and originPoint of the current animation).
+function Entity:drawAll()
+    local x, y = self.collider:getBody():getPosition()
+    local currentAnimation = self:getAnimationManager():getCurrentAnimation()
+    self:draw()
+    self:getCollider():draw()
+    if currentAnimation then
+        self:getAnimationManager():getCurrentAnimation():drawOriginPoint(x, y)
+    end
+end
+
 ---Gets the animation manager of the entity.
 ---@return AnimationManager animationManager The animation manager.
 function Entity:getAnimationManager()
