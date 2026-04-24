@@ -81,14 +81,13 @@ function StateManager:addState(name, enter, update, draw, exit)
 end
 
 ---Adds a batch of states to the state manager.
----@param states table[] The table of states parameters.
+---@param states table<string, function[]> The table of states parameters.
 function StateManager:addStates(states)
-	for _, state in ipairs(states) do
-		local name   = state[1]
-		local enter  = state[2]
-		local update = state[3]
-		local draw   = state[4]
-		local exit   = state[5]
+	for name, functions in pairs(states) do
+		local enter  = functions["enter"]
+		local update = functions["update"]
+		local draw   = functions["draw"]
+		local exit   = functions["exit"]
 		self:addState(name, enter, update, draw, exit)
 	end
 end

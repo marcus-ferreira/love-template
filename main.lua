@@ -28,39 +28,35 @@ function love.load()
     player = entity.newEntity(world, 50, 50, 32, 32, "dynamic")
     block = entity.newEntity(world, 200, 50, 32, 60, "static")
 
-    player:getAnimationManager():addAnimations(
-        {
-            { "idle",   playerSpritesheet, playerGrids[1], { 1 } },
-            { "attack", playerSpritesheet, playerGrids[2], { 1, 2, 3, 4, 5 }, 16, 24, 0.07 }
-        }
-    )
+    player:getAnimationManager():addAnimations({
+        ["idle"] = { playerSpritesheet, playerGrids[1], { 1 } },
+        ["attack"] = { playerSpritesheet, playerGrids[2], { 1, 2, 3, 4, 5 }, 16, 24, 0.07 }
+    })
 
-    player:getStateManager():addStates(
-        {
-            {
-                "idle",
-                function()
-                    player:getAnimationManager():changeAnimation("idle")
-                end,
-                function()
-                    if input.isActionPressed("attack") then
-                        player:getStateManager():changeState("attack")
-                    end
+    player:getStateManager():addStates({
+        ["idle"] = {
+            ["enter"] = function()
+                player:getAnimationManager():changeAnimation("idle")
+            end,
+            ["update"] = function()
+                if input.isActionPressed("attack") then
+                    player:getStateManager():changeState("attack")
                 end
-            },
-            {
-                "attack",
-                function()
-                    player:getAnimationManager():changeAnimation("attack")
-                end,
-                function()
-                    if player:getAnimationManager():getCurrentAnimation():isEnded() then
-                        player:getStateManager():changeState("idle")
-                    end
+            end
+        },
+        ["attack"] = {
+            ["enter"] = function()
+                player:getAnimationManager():changeAnimation("attack")
+            end,
+            ["update"] = function()
+                if player:getAnimationManager():getCurrentAnimation():isEnded() then
+                    player:getStateManager():changeState("idle")
                 end
-            }
+            end
         }
-    )
+    })
+
+    player:getStateManager():changeState("idle")
 
     input.setActionsKeys({
         ["up"] = { "up", "w" },
