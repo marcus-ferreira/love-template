@@ -79,9 +79,9 @@ end
 ---Assigns a table of keys to any number of actions.
 ---@param actions table<string, table> A table of actions, composed by a table of keys.
 function input.setActionsKeys(actions)
-    for action, keys in pairs(actions) do
+    for name, keys in pairs(actions) do
         for _, key in ipairs(keys) do
-            input.setActionKey(action, key)
+            input.setActionKey(name, key)
         end
     end
 end
