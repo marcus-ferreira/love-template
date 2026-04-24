@@ -167,19 +167,32 @@ function AnimationManager:addAnimation(name, image, grid, frames, originX, origi
 end
 
 ---Adds a batch of animations to the animation manager.
----@param animations table[] The table of animations parameters.
+---@param animations table<string, table> The table of animations parameters.
 function AnimationManager:addAnimations(animations)
-	for _, animation in ipairs(animations) do
-		local name     = animation[1]
-		local image    = animation[2]
-		local grid     = animation[3]
-		local frames   = animation[4]
-		local originX  = animation[5]
-		local originY  = animation[6]
-		local interval = animation[7]
-		local loop     = animation[8]
-		self:addAnimation(name, image, grid, frames, originX, originY, interval, loop)
+	for name, parms in pairs(animations) do
+		self:addAnimation(
+			name,
+			parms[1], -- image
+			parms[2], -- grid
+			parms[3], -- frames
+			parms[4], -- originX
+			parms[5], -- originY
+			parms[6], -- interval
+			parms[7] -- loop
+		)
 	end
+
+	-- for _, animation in ipairs(animations) do
+	-- 	local name     = animation[1]
+	-- 	local image    = animation[2]
+	-- 	local grid     = animation[3]
+	-- 	local frames   = animation[4]
+	-- 	local originX  = animation[5]
+	-- 	local originY  = animation[6]
+	-- 	local interval = animation[7]
+	-- 	local loop     = animation[8]
+	-- 	self:addAnimation(name, image, grid, frames, originX, originY, interval, loop)
+	-- end
 end
 
 ---Changes the current animation of the animation manager.
