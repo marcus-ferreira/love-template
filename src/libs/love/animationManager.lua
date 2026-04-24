@@ -170,29 +170,15 @@ end
 ---@param animations table<string, table> The table of animations parameters.
 function AnimationManager:addAnimations(animations)
 	for name, parms in pairs(animations) do
-		self:addAnimation(
-			name,
-			parms[1], -- image
-			parms[2], -- grid
-			parms[3], -- frames
-			parms[4], -- originX
-			parms[5], -- originY
-			parms[6], -- interval
-			parms[7] -- loop
-		)
+		local image    = parms[1]
+		local grid     = parms[2]
+		local frames   = parms[3]
+		local originX  = parms[4]
+		local originY  = parms[5]
+		local interval = parms[6]
+		local loop     = parms[7]
+		self:addAnimation(name, image, grid, frames, originX, originY, interval, loop)
 	end
-
-	-- for _, animation in ipairs(animations) do
-	-- 	local name     = animation[1]
-	-- 	local image    = animation[2]
-	-- 	local grid     = animation[3]
-	-- 	local frames   = animation[4]
-	-- 	local originX  = animation[5]
-	-- 	local originY  = animation[6]
-	-- 	local interval = animation[7]
-	-- 	local loop     = animation[8]
-	-- 	self:addAnimation(name, image, grid, frames, originX, originY, interval, loop)
-	-- end
 end
 
 ---Changes the current animation of the animation manager.
