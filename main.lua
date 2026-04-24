@@ -1,6 +1,8 @@
 -- Imports all dependencies
 require("dependencies")
 
+---Resizes the window given a scale factor.
+---@param scale number The scale factor.
 function ResizeWindow(scale)
     WindowScale = scale
     love.window.setMode(VIRTUAL_WIDTH * WindowScale, VIRTUAL_HEIGHT * WindowScale, {})
@@ -14,9 +16,7 @@ function love.load()
     -- Initializes the game settings
     love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setNewFont("assets/fonts/love.ttf", 8)
-    love.keyboard.keysPressed = {}
     ResizeWindow(2)
-
 
     playerSpritesheet = love.graphics.newImage("assets/images/ivysaur.png")
     playerGrids = {
@@ -43,7 +43,7 @@ function love.load()
                     player:getAnimationManager():changeAnimation("idle")
                 end,
                 function()
-                    if love.keyboard.wasPressed("space") then
+                    if input.isActionPressed("attack") then
                         player:getStateManager():changeState("attack")
                     end
                 end
@@ -61,29 +61,38 @@ function love.load()
             }
         }
     )
+
+    input.setActionsKeys({
+        ["up"] = { "up", "w" },
+        ["down"] = { "down", "s" },
+        ["left"] = { "left", "a" },
+        ["right"] = { "right", "d" },
+        ["attack"] = { "space" }
+    })
 end
 
+---@param dt number
 function love.update(dt)
     world:update(dt)
     player:update(dt)
 
     local vx, vy = 0, 0
     local playerForce = 2000
-    if love.keyboard.isDown("left") then
+    if input.isActionDown("left") then
         vx = -playerForce
         player:getAnimationManager():flipAnimationsHorizontally(true)
-    elseif love.keyboard.isDown("right") then
+    elseif input.isActionDown("right") then
         vx = playerForce
         player:getAnimationManager():flipAnimationsHorizontally(false)
     end
-    if love.keyboard.isDown("up") then
+    if input.isActionDown("up") then
         vy = -playerForce
-    elseif love.keyboard.isDown("down") then
+    elseif input.isActionDown("down") then
         vy = playerForce
     end
     player:move(vx, vy, playerForce)
 
-    love.keyboard.keysPressed = {}
+    input.resetPressedKeys()
 end
 
 function love.draw()
@@ -103,12 +112,10 @@ function love.keypressed(key)
         love.event.quit()
     end
 
-    love.keyboard.keysPressed[key] = true
+    input.keypressed(key)
 end
 
----Checks is a given key was pressed in the last frame.
----@param key love.KeyConstant The key to be checked.
----@return boolean key The key.
-function love.keyboard.wasPressed(key)
-    return love.keyboard.keysPressed[key] or false
+---@param key love.KeyConstant
+function love.keyreleased(key)
+    input.keyreleased(key)
 end
