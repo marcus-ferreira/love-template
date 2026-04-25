@@ -25,7 +25,7 @@ function love.load()
     grids = {
         ["player1"] = animationManager.newGrid(images["player"], 32, 32, 10, 2),
         ["player2"] = animationManager.newGrid(images["player"], 74, 40, 5, 1, 0, 64),
-        ["tileset"] = animationManager.newGrid(images["tileset"], 16, 16, 19, 12)
+        ["tileset"] = animationManager.newGrid(images["tileset"], 16, 16, 17, 10)
     }
 
     world = physics.newWorld()
@@ -70,14 +70,18 @@ function love.load()
         ["quit"] = { "escape" }
     })
 
-    map = require("src.scenes.map")
-    love.graphics.setBackgroundColor(0,0,0.5)
+    map = tilemap.newTilemap("src.scenes.map", images["tileset"], grids["tileset"])
+    cam = camera.newCamera(0, 0, 2)
+
+    love.graphics.setBackgroundColor(color.hexToRGB("#a4d6fc"))
 end
 
 ---@param dt number
 function love.update(dt)
     world:update(dt)
     player:update(dt)
+    local playerx, playery = player:getCollider():getBody():getPosition()
+    cam:setPosition(playerx - (VIRTUAL_WIDTH / 2), playery - (VIRTUAL_HEIGHT / 2))
 
     local vx, vy = 0, 0
     local playerForce = 2000
@@ -103,15 +107,12 @@ function love.update(dt)
 end
 
 function love.draw()
-    love.graphics.scale(WindowScale, WindowScale)
+    cam:setCamera()
+    map:draw()
     player:drawAll()
     block:drawAll()
 
-
-    
-
-
-
+    cam:unsetCamera()
     -- Debug
     -- love.graphics.print("currentState: " .. player:getStateManager():getCurrentState():getName(), 0, 0)
     -- love.graphics.print("isEnded: " .. tostring(player:getAnimationManager():getCurrentAnimation():isEnded()), 0, 8)
