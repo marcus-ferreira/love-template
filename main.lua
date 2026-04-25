@@ -18,10 +18,14 @@ function love.load()
     love.graphics.setNewFont("assets/fonts/love.ttf", 8)
     ResizeWindow(2)
 
-    playerSpritesheet = love.graphics.newImage("assets/images/ivysaur.png")
-    playerGrids = {
-        animationManager.newGrid(playerSpritesheet, 32, 32, 10, 2),
-        animationManager.newGrid(playerSpritesheet, 74, 40, 5, 1, 0, 64)
+    images = {
+        ["player"] = love.graphics.newImage("assets/images/ivysaur.png"),
+        ["tileset"] = love.graphics.newImage("assets/images/tileset.png")
+    }
+    grids = {
+        ["player1"] = animationManager.newGrid(images["player"], 32, 32, 10, 2),
+        ["player2"] = animationManager.newGrid(images["player"], 74, 40, 5, 1, 0, 64),
+        ["tileset"] = animationManager.newGrid(images["tileset"], 16, 16, 19, 12)
     }
 
     world = physics.newWorld()
@@ -29,8 +33,8 @@ function love.load()
     block = entity.newEntity(world, 200, 50, 32, 60, "static")
 
     player:getAnimationManager():addAnimations({
-        ["idle"] = { playerSpritesheet, playerGrids[1], { 1 } },
-        ["attack"] = { playerSpritesheet, playerGrids[2], { 1, 2, 3, 4, 5 }, 16, 24, 0.07 }
+        ["idle"] = { images["player"], grids["player1"], { 1 } },
+        ["attack"] = { images["player"], grids["player2"], { 1, 2, 3, 4, 5 }, 16, 24, 0.07 }
     })
 
     player:getStateManager():addStates({
@@ -55,7 +59,6 @@ function love.load()
             end
         }
     })
-
     player:getStateManager():changeState("idle")
 
     input.setActionsKeys({
@@ -63,8 +66,12 @@ function love.load()
         ["down"] = { "down", "s" },
         ["left"] = { "left", "a" },
         ["right"] = { "right", "d" },
-        ["attack"] = { "space" }
+        ["attack"] = { "space" },
+        ["quit"] = { "escape" }
     })
+
+    map = require("src.scenes.map")
+    love.graphics.setBackgroundColor(0,0,0.5)
 end
 
 ---@param dt number
@@ -88,6 +95,10 @@ function love.update(dt)
     end
     player:move(vx, vy, playerForce)
 
+    -- Closes the game
+    if input.isActionPressed("quit") then
+        love.event.quit()
+    end
     input.resetPressedKeys()
 end
 
@@ -96,6 +107,11 @@ function love.draw()
     player:drawAll()
     block:drawAll()
 
+
+    
+
+
+
     -- Debug
     -- love.graphics.print("currentState: " .. player:getStateManager():getCurrentState():getName(), 0, 0)
     -- love.graphics.print("isEnded: " .. tostring(player:getAnimationManager():getCurrentAnimation():isEnded()), 0, 8)
@@ -103,11 +119,6 @@ end
 
 ---@param key love.KeyConstant
 function love.keypressed(key)
-    -- Closes the game
-    if key == "escape" then
-        love.event.quit()
-    end
-
     input.keypressed(key)
 end
 
