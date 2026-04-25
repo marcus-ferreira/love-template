@@ -25,7 +25,7 @@ function love.load()
     grids = {
         ["player1"] = animationManager.newGrid(images["player"], 32, 32, 10, 2),
         ["player2"] = animationManager.newGrid(images["player"], 74, 40, 5, 1, 0, 64),
-        ["tileset"] = animationManager.newGrid(images["tileset"], 16, 16, 19, 12)
+        ["tileset"] = animationManager.newGrid(images["tileset"], 16, 16, 17, 10)
     }
 
     world = physics.newWorld()
@@ -70,8 +70,8 @@ function love.load()
         ["quit"] = { "escape" }
     })
 
-    map = require("src.scenes.map")
-    love.graphics.setBackgroundColor(0,0,0.5)
+    tilemap = tilemap.newTilemap("src.scenes.map", images["tileset"], grids["tileset"])
+    love.graphics.setBackgroundColor(color.hexToRGB("#a4d6fc"))
 end
 
 ---@param dt number
@@ -104,13 +104,9 @@ end
 
 function love.draw()
     love.graphics.scale(WindowScale, WindowScale)
+    tilemap:draw()
     player:drawAll()
     block:drawAll()
-
-
-    
-
-
 
     -- Debug
     -- love.graphics.print("currentState: " .. player:getStateManager():getCurrentState():getName(), 0, 0)
