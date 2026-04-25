@@ -30,6 +30,8 @@ Tilemap.__class = "Tilemap"
 --- Methods
 ---Creates a new Tilemap object.
 ---@param scenePath string The path of the scene.
+---@param image love.Image The image of the scene.
+---@param grid Grid The grid of the scene.
 ---@return Tilemap tilemap The Tilemap object.
 function tilemap.newTilemap(scenePath, image, grid)
     ---@type Tilemap

@@ -70,7 +70,9 @@ function love.load()
         ["quit"] = { "escape" }
     })
 
-    tilemap = tilemap.newTilemap("src.scenes.map", images["tileset"], grids["tileset"])
+    map = tilemap.newTilemap("src.scenes.map", images["tileset"], grids["tileset"])
+    cam = camera.newCamera(0, 0, 2)
+
     love.graphics.setBackgroundColor(color.hexToRGB("#a4d6fc"))
 end
 
@@ -78,6 +80,8 @@ end
 function love.update(dt)
     world:update(dt)
     player:update(dt)
+    local playerx, playery = player:getCollider():getBody():getPosition()
+    cam:setPosition(playerx - (VIRTUAL_WIDTH / 2), playery - (VIRTUAL_HEIGHT / 2))
 
     local vx, vy = 0, 0
     local playerForce = 2000
@@ -103,11 +107,12 @@ function love.update(dt)
 end
 
 function love.draw()
-    love.graphics.scale(WindowScale, WindowScale)
-    tilemap:draw()
+    cam:setCamera()
+    map:draw()
     player:drawAll()
     block:drawAll()
 
+    cam:unsetCamera()
     -- Debug
     -- love.graphics.print("currentState: " .. player:getStateManager():getCurrentState():getName(), 0, 0)
     -- love.graphics.print("isEnded: " .. tostring(player:getAnimationManager():getCurrentAnimation():isEnded()), 0, 8)
