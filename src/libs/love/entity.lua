@@ -20,7 +20,7 @@ local entity = {}
 ---@field private stateManager StateManager The state manager of the entity.
 ---@field private animationManager AnimationManager The animation manager of the entity.
 ---@field private collider RectangleCollider|CircleCollider The collider of the entity.
----@field private variables any[] The table of variables of the entity.
+---@field private variables table<string, any> The table of variables of the entity.
 ---@field private __index? table The index of the Entity (for iterating).
 local Entity = {}
 Entity.__index = Entity
@@ -92,7 +92,7 @@ function Entity:getVariable(name)
 end
 
 ---Gets the variables of the entity.
----@return any[] variables The list of variables of the entity.
+---@return table<string, any> variables The list of variables of the entity.
 function Entity:getVariables()
     return self.variables
 end
