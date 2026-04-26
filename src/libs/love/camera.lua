@@ -41,11 +41,45 @@ function camera.newCamera(x, y, scale, followSpeed)
 	local self = {
 		position = vector.newVector2(x, y),
 		scale = _scale,
-		followSpeed = _followSpeed,
-		rotation = 0
+		rotation = 0,
+		followSpeed = _followSpeed
 	}
 	setmetatable(self, Camera)
 	return self
+end
+
+---Gets the position vector of the camera.
+---@return Vector2 position The position vector of the camera.
+function Camera:getPosition()
+	return self.position
+end
+
+---Gets the scale of the camera.
+---@return number scale The scale of the camera.
+function Camera:getScale()
+	return self.scale
+end
+
+---Gets the follow speed of the camera.
+---@return number followSpeed The follow speed of the camera.
+function Camera:getFollowSpeed()
+	return self.followSpeed
+end
+
+---Moves a camera to a targe position given a x and y values.
+---@param x number The X position target.
+---@param y number The Y position target.
+---@param dt number The delta time.
+function Camera:moveTo(x, y, dt)
+	local target = vector.newVector2(x, y)
+	local direction = target - self.position
+	local distance = direction:magnitude()
+
+	if distance < 0.1 then
+		self.position = target
+	else
+		self.position = self.position + direction * (self.followSpeed * dt)
+	end
 end
 
 ---Rotates the camera.
