@@ -52,11 +52,15 @@ function Vector2:__sub(v)
 	return vector.newVector2(self.x - v:getX(), self.y - v:getY())
 end
 
----Multiplies the vector by a scalar.
----@param scalar number The scalar to multiply by.
+---Multiplies the vector by a scalar or by other vector.
+---@param v Vector2|number The scalar to multiply by.
 ---@return Vector2 vector2 The vector result of the multiplication.
-function Vector2:__mul(scalar)
-	return vector.newVector2(self.x * scalar, self.y * scalar)
+function Vector2:__mul(v)
+	if type(v) == "number" then
+		return vector.newVector2(self.x * v, self.y * v)
+	else
+		return vector.newVector2(self.x * v:getX(), self.y * v:getY())
+	end
 end
 
 ---Divides the vector by a scalar.
