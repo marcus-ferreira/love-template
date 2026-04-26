@@ -115,6 +115,14 @@ function Entity:setVariable(name, value)
     self.variables[name] = value
 end
 
+---Sets a value to a table of variables.
+---@param variables table<string, any>
+function Entity:setVariables(variables)
+    for variable, value in pairs(variables) do
+        self:setVariable(variable, value)
+    end
+end
+
 ---Updates the entity.
 ---@param dt number The delta time.
 function Entity:update(dt)
