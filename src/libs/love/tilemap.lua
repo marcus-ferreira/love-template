@@ -42,7 +42,7 @@ function tilemap.newTilemap(scenePath, image, grid)
         grid = grid
     }
     setmetatable(self, Tilemap)
-    self:setMapSize(self:getScene().width, self:getScene().height)
+    self:setMapSizeInTiles(self:getScene().width, self:getScene().height)
     return self
 end
 
@@ -77,9 +77,15 @@ function Tilemap:getImage()
     return self.image
 end
 
+---Gets the size of the map (in pixels).
+---@return Vector2 mapSize The size of the map (in pixels).
+function Tilemap:getMapSizeInPixels()
+    return self.mapSize * self.grid:getTileSize()
+end
+
 ---Gets the size of the map (in tiles).
----@return Vector2 mapSize The size of the map.
-function Tilemap:getMapSize()
+---@return Vector2 mapSize The size of the map (in tiles).
+function Tilemap:getMapSizeInTiles()
     return self.mapSize
 end
 
@@ -92,7 +98,7 @@ end
 ---Sets the new map size.
 ---@param x number The new width of the map.
 ---@param y number The new height of the map.
-function Tilemap:setMapSize(x, y)
+function Tilemap:setMapSizeInTiles(x, y)
     self.mapSize:setCoordinates(x, y)
 end
 
