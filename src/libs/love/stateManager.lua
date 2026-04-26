@@ -81,7 +81,7 @@ function StateManager:addState(name, enter, update, draw, exit)
 end
 
 ---Adds a batch of states to the state manager.
----@param states table<string, function[]> The table of states parameters.
+---@param states table<string, table<string, function>> The table of states parameters.
 function StateManager:addStates(states)
 	for name, functions in pairs(states) do
 		local enter  = functions["enter"]

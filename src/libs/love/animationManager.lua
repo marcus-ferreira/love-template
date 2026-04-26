@@ -167,7 +167,7 @@ function AnimationManager:addAnimation(name, image, grid, frames, originX, origi
 end
 
 ---Adds a batch of animations to the animation manager.
----@param animations table<string, table> The table of animations parameters.
+---@param animations table<string, any[]> The table of animations parameters.
 function AnimationManager:addAnimations(animations)
 	for name, parms in pairs(animations) do
 		local image    = parms[1]
