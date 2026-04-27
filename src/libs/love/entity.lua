@@ -100,12 +100,10 @@ end
 ---Moves the entity given a speed.
 ---@param vx number The horizontal velocity to move the entity.
 ---@param vy number The vertical velocity to move the entity.
----@param force number The force to move the entity.
-function Entity:move(vx, vy, force)
-    if vx == 0 and vy == 0 then return end
-    local direction = vector.newVector2(vx, vy):normalize()
-    local forceVector = direction * force
-    self.collider:getBody():applyForce(forceVector:getX(), forceVector:getY())
+---@param speed number The speed to move the entity.
+function Entity:move(vx, vy, speed)
+    local moveVector = vector.newVector2(vx, vy):normalize() * speed
+    self.collider:getBody():setLinearVelocity(moveVector:getX(), moveVector:getY())
 end
 
 ---Sets a new value to a variable.
