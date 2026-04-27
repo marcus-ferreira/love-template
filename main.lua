@@ -28,15 +28,14 @@ function love.load()
         ["tileset"] = animationManager.newGrid(images["tileset"], 16, 16, 17, 10)
     }
 
-    world = physics.newWorld()
-    player = entity.newEntity(world, 50, 50, 32, 32, "dynamic")
-    block = entity.newEntity(world, 200, 50, 32, 60, "static")
+    world = physics.newWorld(0, 500)
+    player = entity.newEntity(world, 50, 50, 20, 16, "dynamic")
+    block = entity.newEntity(world, 0 + 400, 13 * 16 + ((6 * 16) / 2), 800, 6 * 16, "static")
 
     player:getAnimationManager():addAnimations({
-        ["idle"] = { images["player"], grids["player1"], { 1 } },
-        ["attack"] = { images["player"], grids["player2"], { 1, 2, 3, 4, 5 }, 16, 24, 0.07 }
+        ["idle"] = { images["player"], grids["player1"], { 1 }, 16, 24 },
+        ["attack"] = { images["player"], grids["player2"], { 1, 2, 3, 4, 5 }, 16, 32, 0.07 }
     })
-
     player:getStateManager():addStates({
         ["idle"] = {
             ["enter"] = function()
@@ -62,12 +61,34 @@ function love.load()
     player:getStateManager():changeState("idle")
 
     input.setActionsKeys({
-        ["up"] = { "up", "w" },
-        ["down"] = { "down", "s" },
-        ["left"] = { "left", "a" },
-        ["right"] = { "right", "d" },
-        ["attack"] = { "space" },
-        ["quit"] = { "escape" }
+        ["up"] = {
+            ["keyboard"] = { "up", "w" },
+            ["gamepad"]  = { "dpup" }
+        },
+        ["down"] = {
+            ["keyboard"] = { "down", "s" },
+            ["gamepad"]  = { "dpdown" }
+        },
+        ["left"] = {
+            ["keyboard"] = { "left", "a" },
+            ["gamepad"]  = { "dpleft" }
+        },
+        ["right"] = {
+            ["keyboard"] = { "right", "d" },
+            ["gamepad"]  = { "dpright" }
+        },
+        ["attack"] = {
+            ["keyboard"] = { "space" },
+            ["gamepad"]  = { "x" }
+        },
+        ["jump"] = {
+            ["keyboard"] = { "up", "w" },
+            ["gamepad"]  = { "a" }
+        },
+        ["quit"] = {
+            ["keyboard"] = { "escape" },
+            ["gamepad"]  = { "back" }
+        }
     })
 
     map = tilemap.newTilemap("src.scenes.map", images["tileset"], grids["tileset"])
@@ -80,42 +101,56 @@ end
 function love.update(dt)
     world:update(dt)
     player:update(dt)
-    local playerx, playery = player:getCollider():getBody():getPosition()
-    cam:setPosition(playerx - (VIRTUAL_WIDTH / 2), playery - (VIRTUAL_HEIGHT / 2))
 
-    local vx, vy = 0, 0
-    local playerForce = 2000
+    local playerx, playery = player:getCollider():getBody():getPosition()
+    if playerx < VIRTUAL_WIDTH / 2 then
+        playerx = VIRTUAL_WIDTH / 2
+    elseif playerx > map:getMapSizeInPixels():getX() - (VIRTUAL_WIDTH / 2) then
+        playerx = map:getMapSizeInPixels():getX() - (VIRTUAL_WIDTH / 2)
+    end
+    if playery < VIRTUAL_HEIGHT / 2 then
+        playery = VIRTUAL_HEIGHT / 2
+    elseif playery > map:getMapSizeInPixels():getY() - (VIRTUAL_HEIGHT / 2) then
+        playery = map:getMapSizeInPixels():getY() - (VIRTUAL_HEIGHT / 2)
+    end
+    cam:moveTo(playerx - (VIRTUAL_WIDTH / 2), playery - (VIRTUAL_HEIGHT / 2), dt)
+
+    local vx, vy = 0,0
+    local speed = 10
+    local jumpForce = 200
     if input.isActionDown("left") then
-        vx = -playerForce
+        vx = -speed
         player:getAnimationManager():flipAnimationsHorizontally(true)
     elseif input.isActionDown("right") then
-        vx = playerForce
+        vx = speed
         player:getAnimationManager():flipAnimationsHorizontally(false)
     end
     if input.isActionDown("up") then
-        vy = -playerForce
+        vy = -speed
     elseif input.isActionDown("down") then
-        vy = playerForce
+        vy = speed
     end
-    player:move(vx, vy, playerForce)
+    if input.isActionPressed("jump") and player:getCollider():getBody():isTouching(block:getCollider():getBody()) then
+        vy = -jumpForce
+    end
+    player:move(vx, vy, speed)
 
     -- Closes the game
     if input.isActionPressed("quit") then
         love.event.quit()
     end
+
     input.resetPressedKeys()
 end
 
 function love.draw()
     cam:setCamera()
+
     map:draw()
     player:drawAll()
     block:drawAll()
 
     cam:unsetCamera()
-    -- Debug
-    -- love.graphics.print("currentState: " .. player:getStateManager():getCurrentState():getName(), 0, 0)
-    -- love.graphics.print("isEnded: " .. tostring(player:getAnimationManager():getCurrentAnimation():isEnded()), 0, 8)
 end
 
 ---@param key love.KeyConstant
@@ -126,4 +161,20 @@ end
 ---@param key love.KeyConstant
 function love.keyreleased(key)
     input.keyreleased(key)
+end
+
+---@param joystick love.Joystick
+---@param button love.GamepadButton
+function love.gamepadpressed(joystick, button)
+    input.gamepadpressed(joystick, button)
+end
+
+---@param joystick love.Joystick
+function love.joystickadded(joystick)
+    input.addJoystick(joystick)
+end
+
+---@param joystick love.Joystick
+function love.joystickremoved(joystick)
+    input.removeJoystick(joystick)
 end
