@@ -18,23 +18,26 @@ function love.load()
     love.graphics.setNewFont("assets/fonts/love.ttf", 8)
     ResizeWindow(2)
 
-    images = {
-        ["player"] = love.graphics.newImage("assets/images/ivysaur.png"),
-        ["tileset"] = love.graphics.newImage("assets/images/tileset.png")
-    }
-    grids = {
-        ["player1"] = animationManager.newGrid(images["player"], 32, 32, 10, 2),
-        ["player2"] = animationManager.newGrid(images["player"], 74, 40, 5, 1, 0, 64),
-        ["tileset"] = animationManager.newGrid(images["tileset"], 16, 16, 17, 10)
+    assets = {
+        images = {
+            ["player"] = imageManager.newImageManager("assets/images/ivysaur.png", {
+                { 32, 32, 10, 2 },
+                { 74, 40, 5,  1, 0, 64 }
+            }),
+            ["tileset"] = imageManager.newImageManager("assets/images/tileset.png", {
+                { 16, 16, 17, 10 }
+            })
+        }
     }
 
-    world = physics.newWorld(0, 500)
-    player = entity.newEntity(world, 50, 50, 20, 16, "dynamic")
-    block = entity.newEntity(world, 0 + 400, 13 * 16 + ((6 * 16) / 2), 800, 6 * 16, "static")
+    world = physics.newWorld()
+    player = entity.newEntity(world, 50, 190, 20, 16, "dynamic")
+    local blockWidth, blockheight = 800, 96
+    block = entity.newEntity(world, blockWidth / 2, 209 + (blockheight / 2), blockWidth, blockheight, "static")
 
     player:getAnimationManager():addAnimations({
-        ["idle"] = { images["player"], grids["player1"], { 1 }, 16, 24 },
-        ["attack"] = { images["player"], grids["player2"], { 1, 2, 3, 4, 5 }, 16, 32, 0.07 }
+        ["idle"] = { assets.images["player"]:getImage(), assets.images["player"]:getGrid(1), { 1 }, 16, 24 },
+        ["attack"] = { assets.images["player"]:getImage(), assets.images["player"]:getGrid(2), { 1, 2, 3, 4, 5 }, 16, 32, 0.07 }
     })
     player:getStateManager():addStates({
         ["idle"] = {
@@ -91,7 +94,7 @@ function love.load()
         }
     })
 
-    map = tilemap.newTilemap("src.scenes.map", images["tileset"], grids["tileset"])
+    map = tilemap.newTilemap("src.scenes.map", assets.images["tileset"])
     cam = camera.newCamera(0, 0, 2)
 
     love.graphics.setBackgroundColor(color.hexToRGB("#a4d6fc"))
@@ -115,25 +118,29 @@ function love.update(dt)
     end
     cam:moveTo(playerx - (VIRTUAL_WIDTH / 2), playery - (VIRTUAL_HEIGHT / 2), dt)
 
-    local vx, vy = 0,0
-    local speed = 10
+    local vx, vy = 0, 0
+    local speed = 100
     local jumpForce = 200
     if input.isActionDown("left") then
-        vx = -speed
+        vx = -1
         player:getAnimationManager():flipAnimationsHorizontally(true)
     elseif input.isActionDown("right") then
-        vx = speed
+        vx = 1
         player:getAnimationManager():flipAnimationsHorizontally(false)
+    else
+        vx = 0
     end
     if input.isActionDown("up") then
-        vy = -speed
+        vy = -1
     elseif input.isActionDown("down") then
-        vy = speed
-    end
-    if input.isActionPressed("jump") and player:getCollider():getBody():isTouching(block:getCollider():getBody()) then
-        vy = -jumpForce
+        vy = 1
+    else
+        vy = 0
     end
     player:move(vx, vy, speed)
+    if input.isActionPressed("jump") and player:getCollider():getBody():isTouching(block:getCollider():getBody()) then
+        player:getCollider():getBody():applyForce(0, -jumpForce)
+    end
 
     -- Closes the game
     if input.isActionPressed("quit") then
@@ -147,8 +154,10 @@ function love.draw()
     cam:setCamera()
 
     map:draw()
-    player:drawAll()
-    block:drawAll()
+    player:draw()
+    block:draw()
+
+    world:drawColliders()
 
     cam:unsetCamera()
 end
