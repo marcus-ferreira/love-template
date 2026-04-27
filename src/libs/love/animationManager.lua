@@ -5,6 +5,7 @@
 
 
 --- Imports
+local imageManager = require("src.libs.love.imageManager")
 local vector = require("src.libs.love.vector")
 
 
@@ -33,15 +34,6 @@ local animationState = {
 local AnimationManager = {}
 AnimationManager.__index = AnimationManager
 AnimationManager.__class = "AnimationManager"
-
----@class Grid
----@field private tileSize Vector2 The size vector of each tile.
----@field private quads love.Quad[] A table of the quads created by newGrid.
----@field private __index? table The index of the grid (for iterating).
----@field private __class? string The class of the grid.
-local Grid = {}
-Grid.__index = Grid
-Grid.__class = "Grid"
 
 ---@class Animation
 ---@field private name string The name of the animation.
@@ -77,47 +69,9 @@ function animationManager.newAnimationManager()
 	return self
 end
 
----Creates a new grid of quads based on the given parameters.
----@param image love.Image The image to be used.
----@param tileWidth number The width of each tile.
----@param tileHeight number The height of each tile.
----@param columns number The number of the tiles in a row.
----@param rows number The number of the tiles in a column.
----@param left? number Where to start to draw from left. Default = 0.
----@param top? number Where to start to draw from top. Default = 0.
----@param offsetX? number The margin in between tiles columns. Default = 0.
----@param offsetY? number The margin in between tiles rows. Default = 0.
----@return Grid grid The Grid object.
-function animationManager.newGrid(image, tileWidth, tileHeight, columns, rows, left, top, offsetX, offsetY)
-	local _left = left or 0
-	local _top = top or 0
-	local _offsetX = offsetX or 0
-	local _offsetY = offsetY or 0
-
-	---@type Grid
-	local self = {
-		tileSize = vector.newVector2(tileWidth, tileHeight),
-		quads = {}
-	}
-	setmetatable(self, Grid)
-	for y = 0, rows - 1 do
-		for x = 0, columns - 1 do
-			local quad = love.graphics.newQuad(
-				_left + x * (tileWidth + _offsetX), -- x
-				_top + y * (tileHeight + _offsetY), -- y
-				tileWidth,              -- width
-				tileHeight,             -- height
-				image:getDimensions()   -- sw, sh
-			)
-			self:addQuad(quad)
-		end
-	end
-	return self
-end
-
 ---Creates a new Animation object.
 ---@param name string The name of the animation.
----@param image love.Image The image to be used.
+---@param img love.Image The image to be used.
 ---@param grid Grid The grid of quads created by newGrid.
 ---@param frames number[] A table of the numbers of the quads in order.
 ---@param originX? number The X origin for drawing. Default = 0.
@@ -125,7 +79,7 @@ end
 ---@param interval? number The interval between frame quads, in seconds. Default = 1.
 ---@param loop? boolean True if the animation should be looped or false if contrary. Default = false.
 ---@return Animation animation The new Animation object.
-function animationManager.newAnimation(name, image, grid, frames, originX, originY, interval, loop)
+function animationManager.newAnimation(name, img, grid, frames, originX, originY, interval, loop)
 	local tileSize = grid:getTileSize()
 	local _originX = originX or tileSize:getX() / 2
 	local _originY = originY or tileSize:getY() / 2
@@ -135,7 +89,7 @@ function animationManager.newAnimation(name, image, grid, frames, originX, origi
 	---@type Animation
 	local self = {
 		name = name,
-		image = image,
+		image = img,
 		grid = grid,
 		frames = frames,
 		currentFrameIndex = 1,
@@ -170,14 +124,14 @@ end
 ---@param animations table<string, any[]> The table of animations parameters.
 function AnimationManager:addAnimations(animations)
 	for name, parms in pairs(animations) do
-		local image    = parms[1]
+		local img      = parms[1]
 		local grid     = parms[2]
 		local frames   = parms[3]
 		local originX  = parms[4]
 		local originY  = parms[5]
 		local interval = parms[6]
 		local loop     = parms[7]
-		self:addAnimation(name, image, grid, frames, originX, originY, interval, loop)
+		self:addAnimation(name, img, grid, frames, originX, originY, interval, loop)
 	end
 end
 
@@ -276,30 +230,6 @@ function AnimationManager:update(dt)
 	if self.currentAnimation then
 		self.currentAnimation:update(dt)
 	end
-end
-
----Adds a quad to the grid.
----@param quad love.Quad The quad to be added to the grid.
-function Grid:addQuad(quad)
-	table.insert(self.quads, quad)
-end
-
----Gets the tile size of the grid.
----@return Vector2 tileSize The size vector of a tile of the grid.
-function Grid:getTileSize()
-	return self.tileSize
-end
-
----Gets the quad at the specified index in the grid.
----@return love.Quad quad The quad at the specified index.
-function Grid:getQuad(index)
-	return self.quads[index]
-end
-
----Gets the quads of the Grid.
----@return love.Quad[] quads The list of quads.
-function Grid:getQuads()
-	return self.quads
 end
 
 ---Draws the current frame of the animation. Should be called in love.draw.
