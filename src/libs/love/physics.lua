@@ -107,9 +107,7 @@ function physics.newRectangleCollider(world, x, y, width, height, type)
     local shape = love.physics.newRectangleShape(width, height)
     local fixture = love.physics.newFixture(body, shape)
     body:setFixedRotation(true)
-    body:setLinearDamping(20)
     fixture:setFriction(0)
-
 
     ---@type RectangleCollider
     local self = {
