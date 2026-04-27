@@ -1,6 +1,26 @@
 -- Imports all dependencies
 require("dependencies")
 
+---Loads the assets.
+function LoadAssets()
+    local manifest = require("src.assets")
+    assets = { fonts = {}, images = {}, sounds = {} }
+
+    for name, parms in pairs(manifest.fonts) do
+        assets.fonts[name] = love.graphics.newFont(parms.path, parms.size)
+    end
+
+    for name, parms in pairs(manifest.images) do
+        assets.images[name] = imageManager.newImageManager(parms.path, parms.grids)
+    end
+
+    for name, path in pairs(manifest.sounds) do
+        -- "static" para sons curtos, "stream" para músicas longas
+        local type = name:sub(1, 3) == "bgm" and "stream" or "static"
+        assets.sounds[name] = love.audio.newSource(path, type)
+    end
+end
+
 ---Resizes the window given a scale factor.
 ---@param scale number The scale factor.
 function ResizeWindow(scale)
@@ -9,26 +29,11 @@ function ResizeWindow(scale)
 end
 
 function love.load()
-    -- Global constants
-    VIRTUAL_WIDTH = 400
-    VIRTUAL_HEIGHT = 300
-
     -- Initializes the game settings
     love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setNewFont("assets/fonts/love.ttf", 8)
     ResizeWindow(2)
-
-    assets = {
-        images = {
-            ["player"] = imageManager.newImageManager("assets/images/ivysaur.png", {
-                { 32, 32, 10, 2 },
-                { 74, 40, 5,  1, 0, 64 }
-            }),
-            ["tileset"] = imageManager.newImageManager("assets/images/tileset.png", {
-                { 16, 16, 17, 10 }
-            })
-        }
-    }
+    LoadAssets()
 
     world = physics.newWorld()
     player = entity.newEntity(world, 50, 190, 20, 16, "dynamic")
@@ -36,25 +41,25 @@ function love.load()
     block = entity.newEntity(world, blockWidth / 2, 209 + (blockheight / 2), blockWidth, blockheight, "static")
 
     player:getAnimationManager():addAnimations({
-        ["idle"] = { assets.images["player"]:getImage(), assets.images["player"]:getGrid(1), { 1 }, 16, 24 },
-        ["attack"] = { assets.images["player"]:getImage(), assets.images["player"]:getGrid(2), { 1, 2, 3, 4, 5 }, 16, 32, 0.07 }
+        idle = { assets.images.player:getImage(), assets.images.player:getGrid(1), { 1 }, 16, 24 },
+        attack = { assets.images.player:getImage(), assets.images.player:getGrid(2), { 1, 2, 3, 4, 5 }, 16, 32, 0.07 }
     })
     player:getStateManager():addStates({
-        ["idle"] = {
-            ["enter"] = function()
+        idle = {
+            enter = function()
                 player:getAnimationManager():changeAnimation("idle")
             end,
-            ["update"] = function()
+            update = function()
                 if input.isActionPressed("attack") then
                     player:getStateManager():changeState("attack")
                 end
             end
         },
-        ["attack"] = {
-            ["enter"] = function()
+        attack = {
+            enter = function()
                 player:getAnimationManager():changeAnimation("attack")
             end,
-            ["update"] = function()
+            update = function()
                 if player:getAnimationManager():getCurrentAnimation():isEnded() then
                     player:getStateManager():changeState("idle")
                 end
@@ -64,37 +69,37 @@ function love.load()
     player:getStateManager():changeState("idle")
 
     input.setActionsKeys({
-        ["up"] = {
-            ["keyboard"] = { "up", "w" },
-            ["gamepad"]  = { "dpup" }
+        up = {
+            keyboard = { "up", "w" },
+            gamepad  = { "dpup" }
         },
-        ["down"] = {
-            ["keyboard"] = { "down", "s" },
-            ["gamepad"]  = { "dpdown" }
+        down = {
+            keyboard = { "down", "s" },
+            gamepad  = { "dpdown" }
         },
-        ["left"] = {
-            ["keyboard"] = { "left", "a" },
-            ["gamepad"]  = { "dpleft" }
+        left = {
+            keyboard = { "left", "a" },
+            gamepad  = { "dpleft" }
         },
-        ["right"] = {
-            ["keyboard"] = { "right", "d" },
-            ["gamepad"]  = { "dpright" }
+        right = {
+            keyboard = { "right", "d" },
+            gamepad  = { "dpright" }
         },
-        ["attack"] = {
-            ["keyboard"] = { "space" },
-            ["gamepad"]  = { "x" }
+        attack = {
+            keyboard = { "space" },
+            gamepad  = { "x" }
         },
-        ["jump"] = {
-            ["keyboard"] = { "up", "w" },
-            ["gamepad"]  = { "a" }
+        jump = {
+            keyboard = { "up", "w" },
+            gamepad  = { "a" }
         },
-        ["quit"] = {
-            ["keyboard"] = { "escape" },
-            ["gamepad"]  = { "back" }
+        quit = {
+            keyboard = { "escape" },
+            gamepad  = { "back" }
         }
     })
 
-    map = tilemap.newTilemap("src.scenes.map", assets.images["tileset"])
+    map = tilemap.newTilemap("src.scenes.map", assets.images.tileset)
     cam = camera.newCamera(0, 0, 2)
 
     love.graphics.setBackgroundColor(color.hexToRGB("#a4d6fc"))

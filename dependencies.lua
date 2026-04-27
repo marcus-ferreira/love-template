@@ -1,3 +1,5 @@
+require("src.globals")
+
 -- Lua
 require("src.libs.lua.math")
 require("src.libs.lua.string")
