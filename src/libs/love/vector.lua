@@ -26,13 +26,14 @@ Vector2.__class = "Vector2"
 ---@param y? number The Y component of the vector.
 ---@return Vector2 vector2 A new Vector2 object.
 function vector.newVector2(x, y)
-	local _x = x or 0
-	local _y = y or 0
+	x = x or 0
+	y = y or 0
+
 
 	---@type Vector2
 	local self = {
-		x = _x,
-		y = _y
+		x = x,
+		y = y
 	}
 	setmetatable(self, Vector2)
 	return self
@@ -139,9 +140,9 @@ end
 ---Gets the normalized version of the vector.
 ---@return Vector2 nomalizedVector The normalized vector.
 function Vector2:normalize()
-	local mag = self:magnitude()
-	if mag > 0 then
-		return self / mag
+	local magnitude = self:magnitude()
+	if magnitude > 0 then
+		return self / magnitude
 	end
 	return vector.newVector2(0, 0)
 end
