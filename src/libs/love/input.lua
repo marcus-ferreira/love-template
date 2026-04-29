@@ -141,7 +141,7 @@ end
 ---Assigns a key to an action.
 ---@param action string The name of the action to receive a key.
 ---@param type "keys"|"buttons"|"axes" The type of the key.
----@param key love.KeyConstant|love.GamepadAxis|love.GamepadButton The key to assign.
+---@param key love.KeyConstant|love.GamepadButton|SignaledGamepadAxis The key to assign.
 function input.setActionKey(action, type, key)
     if not input.actions[action] then
         input.actions[action] = { keys = {}, buttons = {}, axes = {} }
