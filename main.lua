@@ -5,20 +5,42 @@ function love.load()
     -- Initializes the game settings
     love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setNewFont("assets/fonts/love.ttf", 8)
+    love.graphics.setBackgroundColor(colors.sweetie16.BLACK)
     ResizeWindow(2)
     LoadAssets()
     SetupInputs()
 
+    world = physics.newWorld({
+        callbacks = {
+            beginContact = function(fixtureA, fixtureB, contact)
+                local blockFixture = nil
+                if fixtureA:getUserData() == "block" then
+                    blockFixture = fixtureA
+                elseif fixtureB:getUserData() == "block" then
+                    blockFixture = fixtureB
+                end
+                if blockFixture then
+                    physics.addQueuedFunction(function()
+                        blockFixture:getBody():setPosition(
+                            love.math.random(love.graphics.getWidth()),
+                            love.math.random(love.graphics.getHeight())
+                        )
+                    end)
+                end
+            end
+        }
+    })
 
-    world = physics.newWorld()
     player = {
         animationManager = animationManager.newAnimationManager(),
-        collider = physics.newCollider(world:getWorld(), 100, 100, "dynamic")
+        collider = physics.newCollider(world, 100, 100, "dynamic", {
+            { "playerMain",   "circle", false, 0, 0, 10 },
+            { "playerSensor", "circle", true,  0, 0, 20 }
+        })
     }
-    player.collider:addFixture("main", "polygon", false, 0, 0, 56, 32)
-    player.collider:addFixture("foot", "polygon", true, 0, 12, 56, 8)
-
-
+    block = physics.newCollider(world, 200, 200, "static", {
+        { "block", "polygon", false, 0, 0, 60, 200 }
+    })
 
 
 
@@ -56,11 +78,8 @@ function love.load()
     -- })
     -- player:getStateManager():changeState("idle")
 
-
     -- map = tilemap.newTilemap("src.scenes.map", assets.images.tileset)
     -- cam = camera.newCamera(0, 0, 2)
-
-    -- love.graphics.setBackgroundColor(color.hexToRGB("#a4d6fc"))
 end
 
 ---@param dt number
@@ -71,10 +90,42 @@ function love.update(dt)
     end
 
     world:update(dt)
-    player.collider:getBody():setLinearVelocity(20, 0)
+
+    local vx, vy = 0, 0
+    local speed = 100
+    vx = input.isActionDown("left") and -1 or input.isActionDown("right") and 1 or 0
+    vy = input.isActionDown("up") and -1 or input.isActionDown("down") and 1 or 0
+
+    local joysticks = love.joystick.getJoysticks()
+    ---@type love.Joystick
+    local joystick = joysticks[1]
+    if joystick then
+        vx = joystick:getGamepadAxis("leftx")
+        vy = joystick:getGamepadAxis("lefty")
+    end
+    player.collider:getBody():applyForce(vx * speed, vy * speed)
+
+    local x, y = player.collider:getBody():getPosition()
+    vx, vy = player.collider:getBody():getLinearVelocity()
+    if (x < 0 and vx < 0) or (x > love.graphics.getWidth() and vx > 0) then
+        player.collider:getBody():setLinearVelocity(-vx, vy)
+    end
+    if (y < 0 and vy < 0) or (y > love.graphics.getHeight() and vy > 0) then
+        player.collider:getBody():setLinearVelocity(vx, -vy)
+    end
 
 
-    -- player:update(dt)
+    -- if input.isActionDown("left") then
+    --     vx = -speed
+    -- elseif input.isActionDown("right") then
+    --     vx = speed
+    -- end
+    -- if input.isActionDown("up") then
+    --     vy = -speed
+    -- elseif input.isActionDown("down") then
+    --     vy = speed
+    -- end
+    -- player.collider:getBody():setLinearVelocity(vx, vy)
 
     -- local playerx, playery = player:getCollider():getBody():getPosition()
     -- if playerx < VIRTUAL_WIDTH / 2 then
@@ -89,36 +140,11 @@ function love.update(dt)
     -- end
     -- cam:moveTo(playerx - (VIRTUAL_WIDTH / 2), playery - (VIRTUAL_HEIGHT / 2), dt)
 
-    -- local vx, vy = 0, 0
-    -- local speed = 100
-    -- local jumpForce = 200
-    -- if input.isActionDown("left") then
-    --     vx = -1
-    --     player:getAnimationManager():flipAnimationsHorizontally(true)
-    -- elseif input.isActionDown("right") then
-    --     vx = 1
-    --     player:getAnimationManager():flipAnimationsHorizontally(false)
-    -- else
-    --     vx = 0
-    -- end
-    -- if input.isActionDown("up") then
-    --     vy = -1
-    -- elseif input.isActionDown("down") then
-    --     vy = 1
-    -- else
-    --     vy = 0
-    -- end
-    -- player:move(vx, vy, speed)
-    -- if input.isActionPressed("jump") and player:getCollider():getBody():isTouching(block:getCollider():getBody()) then
-    --     player:getCollider():getBody():applyForce(0, -jumpForce)
-    -- end
-
-
     input.resetPressedKeys()
 end
 
 function love.draw()
-    player.collider:draw()
+    world:drawColliders()
 
     -- cam:setCamera()
 

@@ -36,46 +36,6 @@ Collider.__class = "Collider"
 
 
 --- Methods
----@param fixtureA love.Fixture
----@param fixtureB love.Fixture
----@param contact love.Contact
-function beginContact(fixtureA, fixtureB, contact)
-    local blockFixture = nil
-    if fixtureA:getUserData() == "block" then
-        blockFixture = fixtureA
-    elseif  fixtureB:getUserData() == "block" then
-        blockFixture = fixtureB
-    end
-    if blockFixture then
-        physics.addQueuedFunction(function()
-            blockFixture:getBody():setPosition(
-                love.math.random(love.graphics.getWidth()),
-                love.math.random(love.graphics.getHeight())
-            )
-        end)
-    end
-end
-
----@param fixtureA love.Fixture
----@param fixtureB love.Fixture
----@param contact love.Contact
-function endContact(fixtureA, fixtureB, contact)
-end
-
----@param fixtureA love.Fixture
----@param fixtureB love.Fixture
----@param contact love.Contact
-function preSolve(fixtureA, fixtureB, contact)
-end
-
----@param fixtureA love.Fixture
----@param fixtureB love.Fixture
----@param contact love.Contact
----@param normalImpulse unknown
----@param tangentImpulse unknown
-function postSolve(fixtureA, fixtureB, contact, normalImpulse, tangentImpulse)
-end
-
 ---Adds a function in the queue to be executed post the world update.
 ---@param fun function The function to be added to the queue.
 function physics.addQueuedFunction(fun)
@@ -90,12 +50,22 @@ function physics.executeQueuedFunctions()
     end
 end
 
----Creates a world.
----@param xg? number The x component of gravity.
----@param yg? number The y component of gravity.
----@param sleep? boolean Whether the bodies in this world are allowed to sleep.
+---Creates a World object.
+---@param config? table The configs of the World (xg, yg, sleep and callbacks).
 ---@return World world A new World object.
-function physics.newWorld(xg, yg, sleep)
+function physics.newWorld(config)
+    config          = config or {}
+    local xg        = config.xg or 0
+    local yg        = config.yg or 0
+    local sleep     = config.sleep ~= nil and config.sleep or true
+    local callbacks = config.callbacks or {
+        beginContact = function(fixtureA, fixtureB, contact) end,
+        endContact   = function(fixtureA, fixtureB, contact) end,
+        preSolve     = function(fixtureA, fixtureB, contact) end,
+        postSolve    = function(fixtureA, fixtureB, contact, normalImpulse, tangentImpulse) end
+    }
+
+
     ---@type World
     local self = {
         world = love.physics.newWorld(xg, yg, sleep),
@@ -103,7 +73,7 @@ function physics.newWorld(xg, yg, sleep)
         queuedFunctions = {}
     }
     setmetatable(self, World)
-    self:getWorld():setCallbacks(beginContact, endContact, preSolve, postSolve)
+    self:getWorld():setCallbacks(callbacks.beginContact, callbacks.endContact, callbacks.preSolve, callbacks.postSolve)
     return self
 end
 
