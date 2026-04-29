@@ -11,11 +11,13 @@ local vector = require("src.libs.love.vector")
 --- Library
 ---@class physics
 local physics = {}
+physics.queuedFunctions = {}
 
 
 --- Classes
 ---@class World
 ---@field private world love.World The love.World.
+---@field private queuedFunctions function[] The functions to be executed after the world update.
 ---@field private colliders Collider[] The colliders of the World.
 ---@field private __index? table The index of the world (for iterating).
 ---@field private __class? string The class of the world.
@@ -38,21 +40,32 @@ Collider.__class = "Collider"
 ---@param fixtureB love.Fixture
 ---@param contact love.Contact
 function beginContact(fixtureA, fixtureB, contact)
-    print(fixtureA:getUserData() .. " started collided with " .. fixtureB:getUserData())
+    local blockFixture = nil
+    if fixtureA:getUserData() == "block" then
+        blockFixture = fixtureA
+    elseif  fixtureB:getUserData() == "block" then
+        blockFixture = fixtureB
+    end
+    if blockFixture then
+        physics.addQueuedFunction(function()
+            blockFixture:getBody():setPosition(
+                love.math.random(love.graphics.getWidth()),
+                love.math.random(love.graphics.getHeight())
+            )
+        end)
+    end
 end
 
 ---@param fixtureA love.Fixture
 ---@param fixtureB love.Fixture
 ---@param contact love.Contact
 function endContact(fixtureA, fixtureB, contact)
-    print(fixtureA:getUserData() .. " finished collided with " .. fixtureB:getUserData())
 end
 
 ---@param fixtureA love.Fixture
 ---@param fixtureB love.Fixture
 ---@param contact love.Contact
 function preSolve(fixtureA, fixtureB, contact)
-    print(fixtureA:getUserData() .. " is colliding with " .. fixtureB:getUserData())
 end
 
 ---@param fixtureA love.Fixture
@@ -61,7 +74,20 @@ end
 ---@param normalImpulse unknown
 ---@param tangentImpulse unknown
 function postSolve(fixtureA, fixtureB, contact, normalImpulse, tangentImpulse)
-    print(fixtureA:getUserData() .. " just collided with " .. fixtureB:getUserData())
+end
+
+---Adds a function in the queue to be executed post the world update.
+---@param fun function The function to be added to the queue.
+function physics.addQueuedFunction(fun)
+    table.insert(physics.queuedFunctions, fun)
+end
+
+---Executes the functions in the queue.
+function physics.executeQueuedFunctions()
+    for i = #physics.queuedFunctions, 1, -1 do
+        physics.queuedFunctions[i]()
+        table.remove(physics.queuedFunctions, i)
+    end
 end
 
 ---Creates a world.
@@ -73,7 +99,8 @@ function physics.newWorld(xg, yg, sleep)
     ---@type World
     local self = {
         world = love.physics.newWorld(xg, yg, sleep),
-        colliders = {}
+        colliders = {},
+        queuedFunctions = {}
     }
     setmetatable(self, World)
     self:getWorld():setCallbacks(beginContact, endContact, preSolve, postSolve)
@@ -157,10 +184,23 @@ function World:drawColliders()
     end
 end
 
+---Executes queued functions of the World.
+function World:executeQueuedFunctions()
+    for _, fun in self.queuedFunctions do
+        fun()
+    end
+end
+
 ---Gets the colliders of the World.
 ---@return Collider[] colliders The colliders of the World.
 function World:getColliders()
     return self.colliders
+end
+
+---Gets the queued functions of the World.
+---@return function[] functions The queued functions of the World.
+function World:getQueuedFunctions()
+    return self.queuedFunctions
 end
 
 ---Gets the world.
@@ -175,6 +215,7 @@ end
 ---@param positioniterations? number The maximum number of steps used to determine the new positions when resolving a collision.
 function World:update(dt, velocityiterations, positioniterations)
     self.world:update(dt, velocityiterations, positioniterations)
+    physics.executeQueuedFunctions()
 end
 
 ---Adds a new fixture to the Collider.
