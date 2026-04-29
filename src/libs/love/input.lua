@@ -8,37 +8,46 @@
 require("src.libs.lua.table")
 
 
+---@alias SignaledGamepadAxis
+---| "leftx-"
+---| "leftx+"
+---| "lefty-"
+---| "lefty+"
+---| "rightx-"
+---| "rightx+"
+---| "righty-"
+---| "righty+"
+---| "triggerleft-"
+---| "triggerleft+"
+---| "triggerright-"
+---| "triggerright+"
+
+
 --- Library
 ---@class input
 local input = {}
+---@type table<string, table<string, string[]>>
 input.actions = {}
-input.keys = {}
-input.joysticks = {}
-input.buttons = {}
+---@type table<string, boolean>
+input.pressedKeys = {}
+---@type table<love.Joystick, table<string, boolean>>
+input.pressedButtons = {}
+
+
 
 
 --- Methods
 ---Adds a joystick.
 ---@param joystick love.Joystick The joystick to be added.
 function input.addJoystick(joystick)
-    table.insert(input.joysticks, joystick)
-    input.buttons[joystick] = {}
+    input.pressedButtons[joystick] = {}
 end
 
 ---Gets the keys of an action.
 ---@param action string The name of the action.
----@return table|nil keys The keys of the action.
+---@return table keys The keys of the action.
 function input.getActionKeys(action)
-    local actionKeys = {
-        ["keyboard"] = {},
-        ["gamepad"] = {}
-    }
-    for type, keys in pairs(input.actions[action]) do
-        for _, key in ipairs(keys) do
-            table.insert(actionKeys[type], key)
-        end
-    end
-    return actionKeys
+    return input.actions[action]
 end
 
 ---Checks if any key of an action is down.
@@ -50,10 +59,20 @@ function input.isActionDown(action)
     local joystick = joysticks[1]
     for type, keys in pairs(input.actions[action]) do
         for _, key in ipairs(keys) do
-            if type == "keyboard" and love.keyboard.isDown(key) then
+            if type == "keys" and love.keyboard.isDown(key) then
                 return true
-            elseif type == "gamepad" and (joystick and joystick:isGamepadDown(key)) then
-                return true
+            elseif joystick then
+                if type == "buttons" and joystick:isGamepadDown(key) then
+                    return true
+                elseif type == "axes" then
+                    local axis = key:sub(1, -2)
+                    local sign = key:sub(-1)
+                    if sign == "-" and joystick:getGamepadAxis(axis) < 0 then
+                        return true
+                    elseif sign == "+" and joystick:getGamepadAxis(axis) > 0 then
+                        return true
+                    end
+                end
             end
         end
     end
@@ -69,9 +88,9 @@ function input.isActionPressed(action)
     local joystick = joysticks[1]
     for type, keys in pairs(input.actions[action]) do
         for _, key in ipairs(keys) do
-            if type == "keyboard" and input.keys[key] then
+            if type == "keys" and input.pressedKeys[key] then
                 return true
-            elseif type == "gamepad" and (joystick and input.buttons[joystick][key]) then
+            elseif type == "buttons" and (joystick and input.pressedButtons[joystick][key]) then
                 return true
             end
         end
@@ -83,53 +102,49 @@ end
 ---@param joystick love.Joystick The joystick to set the button.
 ---@param button love.GamepadButton The button to set true.
 function input.gamepadpressed(joystick, button)
-    input.buttons[joystick][button] = true
+    input.pressedButtons[joystick][button] = true
 end
 
 ---Callback function to set a gamepad button to false.
 ---@param joystick love.Joystick The joystick to set the button.
 ---@param button love.GamepadButton The button to set false.
 function input.gamepadreleased(joystick, button)
-    input.buttons[joystick][button] = false
+    input.pressedButtons[joystick][button] = false
 end
 
 ---Callback function to set a key to true.
 ---@param key love.KeyConstant The key to set true.
 function input.keypressed(key)
-    input.keys[key] = true
+    input.pressedKeys[key] = true
 end
 
 ---Callback function to set a key to false.
 ---@param key love.KeyConstant The key to set false.
 function input.keyreleased(key)
-    input.keys[key] = false
+    input.pressedKeys[key] = false
 end
 
 ---Removes a joystick.
 ---@param joystick love.Joystick The joystick to be removed.
 function input.removeJoystick(joystick)
-    input.joysticks[joystick] = nil
-    input.buttons[joystick] = nil
+    input.pressedButtons[joystick] = nil
 end
 
 ---Sets all the keys to false.
 function input.resetPressedKeys()
-    input.keys = {}
-    for joystick, _ in pairs(input.buttons) do
-        input.buttons[joystick] = {}
+    input.pressedKeys = {}
+    for joystick, _ in pairs(input.pressedButtons) do
+        input.pressedButtons[joystick] = {}
     end
 end
 
 ---Assigns a key to an action.
 ---@param action string The name of the action to receive a key.
----@param type "keyboard"|"gamepad" The type of the key.
----@param key love.KeyConstant The key to assign.
+---@param type "keys"|"buttons"|"axes" The type of the key.
+---@param key love.KeyConstant|love.GamepadAxis|love.GamepadButton The key to assign.
 function input.setActionKey(action, type, key)
     if not input.actions[action] then
-        input.actions[action] = {
-            ["keyboard"] = {},
-            ["gamepad"] = {}
-        }
+        input.actions[action] = { keys = {}, buttons = {}, axes = {} }
     end
     assert(not table.contains(input.actions[action][type], key),
         "Key '" .. key .. "' already assigned to action '" .. action .. "'.")
@@ -137,7 +152,7 @@ function input.setActionKey(action, type, key)
 end
 
 ---Assigns a table of keys to any number of actions.
----@param actions table<string, table<string, table<love.KeyConstant|love.GamepadButton>>> A table of actions, composed by a table of keys.
+---@param actions table<string, table<string, (love.KeyConstant|love.GamepadButton|SignaledGamepadAxis)[]>> A table of actions, composed by a table of keys.
 function input.setActionsKeys(actions)
     for action, types in pairs(actions) do
         for type, keys in pairs(types) do

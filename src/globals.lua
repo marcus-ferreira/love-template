@@ -59,33 +59,37 @@ end
 ---Setups the inputs.
 function SetupInputs()
     input.setActionsKeys({
-        up = {
-            keyboard = { "up", "w" },
-            gamepad  = { "dpup" }
+        up     = {
+            keys    = { "up", "w" },
+            buttons = { "dpup" },
+            axes    = { "lefty-" }
         },
-        down = {
-            keyboard = { "down", "s" },
-            gamepad  = { "dpdown" }
+        down   = {
+            keys    = { "down", "s" },
+            buttons = { "dpdown" },
+            axes    = { "lefty+" }
         },
-        left = {
-            keyboard = { "left", "a" },
-            gamepad  = { "dpleft" }
+        left   = {
+            keys    = { "left", "a" },
+            buttons = { "dpleft" },
+            axes    = { "leftx-" }
         },
-        right = {
-            keyboard = { "right", "d" },
-            gamepad  = { "dpright" }
+        right  = {
+            keys    = { "right", "d" },
+            buttons = { "dpright" },
+            axes    = { "leftx+" }
         },
         attack = {
-            keyboard = { "space" },
-            gamepad  = { "x" }
+            keys    = { "space" },
+            buttons = { "x" }
         },
-        jump = {
-            keyboard = { "up", "w" },
-            gamepad  = { "a" }
+        jump   = {
+            keys    = { "up", "w" },
+            buttons = { "a" }
         },
-        quit = {
-            keyboard = { "escape" },
-            gamepad  = { "back" }
+        quit   = {
+            keys    = { "escape" },
+            buttons = { "back" }
         }
     })
 end
