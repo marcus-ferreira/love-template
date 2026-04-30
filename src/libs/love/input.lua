@@ -32,11 +32,37 @@ input.actions = {}
 input.pressedKeys = {}
 ---@type table<love.Joystick, table<string, boolean>>
 input.pressedButtons = {}
-
-
+input.gamepadDeadzone = 0.15
 
 
 --- Methods
+--- Callbacks
+---@param key love.KeyConstant
+function love.keypressed(key)
+    input.keypressed(key)
+end
+
+---@param key love.KeyConstant
+function love.keyreleased(key)
+    input.keyreleased(key)
+end
+
+---@param joystick love.Joystick
+---@param button love.GamepadButton
+function love.gamepadpressed(joystick, button)
+    input.gamepadpressed(joystick, button)
+end
+
+---@param joystick love.Joystick
+function love.joystickadded(joystick)
+    input.addJoystick(joystick)
+end
+
+---@param joystick love.Joystick
+function love.joystickremoved(joystick)
+    input.removeJoystick(joystick)
+end
+
 ---Adds a joystick.
 ---@param joystick love.Joystick The joystick to be added.
 function input.addJoystick(joystick)
@@ -50,13 +76,36 @@ function input.getActionKeys(action)
     return input.actions[action]
 end
 
+---Gets the axis value of a movement action.
+---@param negativeAction string The action related to a negative movement ("up" and "left", for example).
+---@param positiveAction string The action related to a positive movement ("down" and "right", for example).
+---@param gamepadAxis? love.GamepadAxis The axis of the gamepad.
+---@return number axisValue The value of the axis (1 or 0 for keyboard and -1 to 1 for gamepad).
+function input.getAxis(negativeAction, positiveAction, gamepadAxis)
+    local value = 0
+
+    local neg = input.isActionDown(negativeAction) and 1 or 0
+    local pos = input.isActionDown(positiveAction) and 1 or 0
+    value = pos - neg
+
+    ---@type love.Joystick
+    local joystick = love.joystick.getJoysticks()[1]
+    if joystick and gamepadAxis then
+        local axisValue = joystick:getGamepadAxis(gamepadAxis)
+        if math.abs(axisValue) > input.gamepadDeadzone then
+            value = axisValue
+        end
+    end
+
+    return value
+end
+
 ---Checks if any key of an action is down.
 ---@param action string The action to check.
 ---@return boolean isDown True if any key of the action is down, false if otherwise.
 function input.isActionDown(action)
-    local joysticks = love.joystick.getJoysticks()
     ---@type love.Joystick
-    local joystick = joysticks[1]
+    local joystick = love.joystick.getJoysticks()[1]
     for type, keys in pairs(input.actions[action]) do
         for _, key in ipairs(keys) do
             if type == "keys" and love.keyboard.isDown(key) then
@@ -67,9 +116,9 @@ function input.isActionDown(action)
                 elseif type == "axes" then
                     local axis = key:sub(1, -2)
                     local sign = key:sub(-1)
-                    if sign == "-" and joystick:getGamepadAxis(axis) < 0 then
+                    if sign == "-" and joystick:getGamepadAxis(axis) < -input.gamepadDeadzone then
                         return true
-                    elseif sign == "+" and joystick:getGamepadAxis(axis) > 0 then
+                    elseif sign == "+" and joystick:getGamepadAxis(axis) > input.gamepadDeadzone then
                         return true
                     end
                 end
@@ -83,9 +132,8 @@ end
 ---@param action string The action to check.
 ---@return boolean isActionPressed True if any key of a given action is pressed, false if otherwise.
 function input.isActionPressed(action)
-    local joysticks = love.joystick.getJoysticks()
     ---@type love.Joystick
-    local joystick = joysticks[1]
+    local joystick = love.joystick.getJoysticks()[1]
     for type, keys in pairs(input.actions[action]) do
         for _, key in ipairs(keys) do
             if type == "keys" and input.pressedKeys[key] then
