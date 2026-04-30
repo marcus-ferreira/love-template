@@ -35,9 +35,11 @@ function love.load()
         animationManager = animationManager.newAnimationManager(),
         collider = physics.newCollider(world, 100, 100, "dynamic", {
             { "playerMain",   "circle", false, 0, 0, 10 },
-            { "playerSensor", "circle", true,  0, 0, 20 }
+            { "playerSensor", "circle", true,  0, 0, 30 },
         })
     }
+    player.collider:getBody():setLinearDamping(0.5)
+
     block = physics.newCollider(world, 200, 200, "static", {
         { "block", "polygon", false, 0, 0, 60, 200 }
     })
@@ -91,53 +93,25 @@ function love.update(dt)
 
     world:update(dt)
 
-    local vx, vy = 0, 0
     local speed = 100
-    vx = input.isActionDown("left") and -1 or input.isActionDown("right") and 1 or 0
-    vy = input.isActionDown("up") and -1 or input.isActionDown("down") and 1 or 0
-
-    local joysticks = love.joystick.getJoysticks()
-    ---@type love.Joystick
-    local joystick = joysticks[1]
-    if joystick then
-        vx = joystick:getGamepadAxis("leftx")
-        vy = joystick:getGamepadAxis("lefty")
-    end
+    local vx = input.getAxis("left", "right", "leftx")
+    local vy = input.getAxis("up", "down", "lefty")
     player.collider:getBody():applyForce(vx * speed, vy * speed)
 
+    local offset = 20
     local x, y = player.collider:getBody():getPosition()
-    vx, vy = player.collider:getBody():getLinearVelocity()
-    if (x < 0 and vx < 0) or (x > love.graphics.getWidth() and vx > 0) then
-        player.collider:getBody():setLinearVelocity(-vx, vy)
+    local windowWidth, windowHeight = love.graphics.getDimensions()
+    if x < -offset then
+        player.collider:getBody():setPosition(windowWidth + offset, y)
+    elseif x > windowWidth + offset then
+        player.collider:getBody():setPosition(-offset, y)
     end
-    if (y < 0 and vy < 0) or (y > love.graphics.getHeight() and vy > 0) then
-        player.collider:getBody():setLinearVelocity(vx, -vy)
+    if y < -offset then
+        player.collider:getBody():setPosition(x, windowHeight + offset)
+    elseif y > windowHeight + offset then
+        player.collider:getBody():setPosition(x, -offset)
     end
 
-
-    -- if input.isActionDown("left") then
-    --     vx = -speed
-    -- elseif input.isActionDown("right") then
-    --     vx = speed
-    -- end
-    -- if input.isActionDown("up") then
-    --     vy = -speed
-    -- elseif input.isActionDown("down") then
-    --     vy = speed
-    -- end
-    -- player.collider:getBody():setLinearVelocity(vx, vy)
-
-    -- local playerx, playery = player:getCollider():getBody():getPosition()
-    -- if playerx < VIRTUAL_WIDTH / 2 then
-    --     playerx = VIRTUAL_WIDTH / 2
-    -- elseif playerx > map:getMapSizeInPixels():getX() - (VIRTUAL_WIDTH / 2) then
-    --     playerx = map:getMapSizeInPixels():getX() - (VIRTUAL_WIDTH / 2)
-    -- end
-    -- if playery < VIRTUAL_HEIGHT / 2 then
-    --     playery = VIRTUAL_HEIGHT / 2
-    -- elseif playery > map:getMapSizeInPixels():getY() - (VIRTUAL_HEIGHT / 2) then
-    --     playery = map:getMapSizeInPixels():getY() - (VIRTUAL_HEIGHT / 2)
-    -- end
     -- cam:moveTo(playerx - (VIRTUAL_WIDTH / 2), playery - (VIRTUAL_HEIGHT / 2), dt)
 
     input.resetPressedKeys()
@@ -153,30 +127,4 @@ function love.draw()
     -- block:drawAll()
 
     -- cam:unsetCamera()
-end
-
----@param key love.KeyConstant
-function love.keypressed(key)
-    input.keypressed(key)
-end
-
----@param key love.KeyConstant
-function love.keyreleased(key)
-    input.keyreleased(key)
-end
-
----@param joystick love.Joystick
----@param button love.GamepadButton
-function love.gamepadpressed(joystick, button)
-    input.gamepadpressed(joystick, button)
-end
-
----@param joystick love.Joystick
-function love.joystickadded(joystick)
-    input.addJoystick(joystick)
-end
-
----@param joystick love.Joystick
-function love.joystickremoved(joystick)
-    input.removeJoystick(joystick)
 end
