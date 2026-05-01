@@ -11,12 +11,14 @@ local vector = require("src.libs.love.vector")
 --- Library
 ---@class physics
 local physics = {}
+physics.queuedFunctions = {}
 
 
 --- Classes
 ---@class World
----@field private world love.World The world.
----@field private colliders (CircleCollider|RectangleCollider)[] The colliders of the world.
+---@field private world love.World The love.World.
+---@field private queuedFunctions function[] The functions to be executed after the world update.
+---@field private colliders Collider[] The colliders of the World.
 ---@field private __index? table The index of the world (for iterating).
 ---@field private __class? string The class of the world.
 local World = {}
@@ -25,137 +27,150 @@ World.__class = "World"
 
 ---@class Collider
 ---@field protected body love.Body The body of the Collider.
----@field protected shape love.CircleShape|love.PolygonShape The shape of the Collider.
----@field protected fixture love.Fixture The fixture of the Collider.
+---@field protected fixtures table<string, love.Fixture> The fixtures of the Collider.
 ---@field private __index? table The index of the Collider (for iterating).
 ---@field private __class? string The class of the Collider.
 local Collider = {}
 Collider.__index = Collider
 Collider.__class = "Collider"
 
----@class CircleCollider : Collider
----@field protected body love.Body The body of the CircleCollider.
----@field protected shape love.CircleShape The shape of the CircleCollider.
----@field protected fixture love.Fixture The fixture of the CircleCollider.
----@field private __index? table The index of the CircleCollider (for iterating).
----@field private __class? string The class of the CircleCollider.
-local CircleCollider = setmetatable({}, Collider)
-CircleCollider.__index = CircleCollider
-CircleCollider.__class = "CircleCollider"
-
----@class RectangleCollider : Collider
----@field protected body love.Body The physics body of the RectangleCollider.
----@field protected shape love.PolygonShape The shape of the RectangleCollider.
----@field protected fixture love.Fixture The fixture of the RectangleCollider.
----@field private __index? table The index of the RectangleCollider (for iterating).
----@field private __class? string The class of the RectangleCollider.
-local RectangleCollider = setmetatable({}, Collider)
-RectangleCollider.__index = RectangleCollider
-RectangleCollider.__class = "RectangleCollider"
-
 
 --- Methods
----Creates a world.
----@param xg? number The x component of gravity.
----@param yg? number The y component of gravity.
----@param sleep? boolean Whether the bodies in this world are allowed to sleep.
+---Adds a function in the queue to be executed post the world update.
+---@param fun function The function to be added to the queue.
+function physics.addQueuedFunction(fun)
+    table.insert(physics.queuedFunctions, fun)
+end
+
+---Executes the functions in the queue.
+function physics.executeQueuedFunctions()
+    for i = #physics.queuedFunctions, 1, -1 do
+        physics.queuedFunctions[i]()
+        table.remove(physics.queuedFunctions, i)
+    end
+end
+
+---Creates a World object.
+---@param config? table The configs of the World (xg, yg, sleep and callbacks).
 ---@return World world A new World object.
-function physics.newWorld(xg, yg, sleep)
+function physics.newWorld(config)
+    config          = config or {}
+    local xg        = config.xg or 0
+    local yg        = config.yg or 0
+    local sleep     = config.sleep ~= nil and config.sleep or true
+    local callbacks = config.callbacks or {
+        beginContact = function(fixtureA, fixtureB, contact) end,
+        endContact   = function(fixtureA, fixtureB, contact) end,
+        preSolve     = function(fixtureA, fixtureB, contact) end,
+        postSolve    = function(fixtureA, fixtureB, contact, normalImpulse, tangentImpulse) end
+    }
+
+
     ---@type World
     local self = {
         world = love.physics.newWorld(xg, yg, sleep),
-        colliders = {}
+        colliders = {},
+        queuedFunctions = {}
     }
     setmetatable(self, World)
+    self:getWorld():setCallbacks(callbacks.beginContact, callbacks.endContact, callbacks.preSolve, callbacks.postSolve)
     return self
 end
 
----Creates a new CircleCollider object.
----@param world love.World The world to which the CircleCollider belongs.
----@param x number The X coordinate of the CircleCollider.
----@param y number The Y coordinate of the CircleCollider.
----@param radius number The radius of the CircleCollider.
----@param type love.BodyType The type of the CircleCollider.
----@return CircleCollider circleCollider A new CircleCollider object.
-function physics.newCircleCollider(world, x, y, radius, type)
-    local body = love.physics.newBody(world, x, y, type)
-    local shape = love.physics.newCircleShape(radius)
-    local fixture = love.physics.newFixture(body, shape)
+---Creates a new Collider object.
+---@param world World The world to which the Collider belongs.
+---@param x number The X coordinate of the Collider.
+---@param y number The Y coordinate of the Collider.
+---@param bodyType love.BodyType The type of the body of the Collider.
+---@param fixtures love.Fixture[] The table of fixtures of the Collider.
+---@return Collider collider A new Collider object.
+function physics.newCollider(world, x, y, bodyType, fixtures)
+    local body = love.physics.newBody(world:getWorld(), x, y, bodyType)
     body:setFixedRotation(true)
-    fixture:setFriction(0)
-
-    ---@type CircleCollider
+    ---@type Collider
     local self = {
         body = body,
-        shape = shape,
-        fixture = fixture,
+        fixtures = {}
     }
-    setmetatable(self, CircleCollider)
+    setmetatable(self, Collider)
+
+    for _, fixture in ipairs(fixtures) do
+        local name      = fixture[1]
+        local shapeType = fixture[2]
+        local isSensor  = fixture[3]
+        local offsetX   = fixture[4]
+        local offsetY   = fixture[5]
+        if shapeType == "circle" then
+            local radius = fixture[6]
+            self:addFixture(name, shapeType, isSensor, offsetX, offsetY, radius)
+        elseif shapeType == "polygon" then
+            local width  = fixture[6]
+            local height = fixture[7]
+            self:addFixture(name, shapeType, isSensor, offsetX, offsetY, width, height)
+        end
+    end
+
+    world:addCollider(self)
     return self
 end
 
----Creates a new RectangleCollider object.
----@param world love.World The world to which the RectangleCollider belongs.
----@param x number The X coordinate of the RectangleCollider.
----@param y number The Y coordinate of the RectangleCollider.
----@param width number The width of the RectangleCollider.
----@param height number The height of the RectangleCollider.
----@param type love.BodyType The type of the body of the RectangleCollider.
----@return RectangleCollider rectangleCollider A new RectangleCollider object.
-function physics.newRectangleCollider(world, x, y, width, height, type)
-    local body = love.physics.newBody(world, x, y, type)
-    local shape = love.physics.newRectangleShape(width, height)
+---Creates a new Fixture object (attached to a shape).
+---@param name string The tag (userdata) of the fixture.
+---@param body love.Body The body of the fixture.
+---@param shapeType love.ShapeType The type of the shape of the fixture.
+---@param isSensor boolean If the fixture is a sensor or not.
+---@param offsetX number The offset x position of the fixture related to the body.
+---@param offsetY number The offset y position of the fixture related to the body.
+---@param ... any The parameters of the shape (radius for CircleShape, width and height for PolygonShape).
+---@return love.Fixture fixture The new Fixture object.
+function physics.newFixture(name, body, shapeType, isSensor, offsetX, offsetY, ...)
+    local shape
+    if shapeType == "circle" then
+        local radius = ...
+        shape = love.physics.newCircleShape(offsetX, offsetY, radius)
+    elseif shapeType == "polygon" then
+        local width, height = ...
+        shape = love.physics.newRectangleShape(offsetX, offsetY, width, height)
+    end
+
     local fixture = love.physics.newFixture(body, shape)
-    body:setFixedRotation(true)
     fixture:setFriction(0)
+    fixture:setUserData(name)
+    fixture:setSensor(isSensor or false)
 
-    ---@type RectangleCollider
-    local self = {
-        body = body,
-        shape = shape,
-        fixture = fixture
-    }
-    setmetatable(self, RectangleCollider)
-    return self
+    return fixture
 end
 
----Adds a new CircleCollider object in the world.
----@param x number The X position of the CircleCollider.
----@param y number The Y position of the CircleCollider.
----@param radius number The radius of the CircleCollider.
----@param type love.BodyType The type of the body of the CircleCollider.
-function World:addNewCircleCollider(x, y, radius, type)
-    table.insert(self.colliders, physics.newCircleCollider(self.world, x, y, radius, type))
+---Adds a Collider in the World.
+---@param collider Collider The Collider to be added.
+function World:addCollider(collider)
+    table.insert(self.colliders, collider)
 end
 
----Adds a new RectangleCollider object in the world.
----@param x number The X coordinate of the RectangleCollider.
----@param y number The Y coordinate of the RectangleCollider.
----@param width number The width of the RectangleCollider.
----@param height number The height of the RectangleCollider.
----@param type love.BodyType The type of the body of the RectangleCollider.
-function World:addNewRectangleCollider(x, y, width, height, type)
-    table.insert(self.colliders, physics.newRectangleCollider(self.world, x, y, width, height, type))
-end
-
----Draws the colliders of the world.
+---Draws the colliders of the World.
 function World:drawColliders()
     for _, collider in ipairs(self.colliders) do
         collider:draw()
     end
 end
 
----Gets the collider given its index.
----@param index number The index of the collider.
----@return CircleCollider|RectangleCollider collider The Collider object.
-function World:getCollider(index)
-    return self.colliders[index]
+---Executes queued functions of the World.
+function World:executeQueuedFunctions()
+    for _, fun in self.queuedFunctions do
+        fun()
+    end
 end
 
----Gets the colliders of the world.
----@return (CircleCollider|RectangleCollider)[] colliders The table of colliders of the world.
+---Gets the colliders of the World.
+---@return Collider[] colliders The colliders of the World.
 function World:getColliders()
     return self.colliders
+end
+
+---Gets the queued functions of the World.
+---@return function[] functions The queued functions of the World.
+function World:getQueuedFunctions()
+    return self.queuedFunctions
 end
 
 ---Gets the world.
@@ -164,18 +179,43 @@ function World:getWorld()
     return self.world
 end
 
----Removes a collider of the world.
----@param index number The index of the collider.
-function World:removeCollider(index)
-    table.remove(self.colliders, index)
-end
-
 ---Update the state of the World.
 ---@param dt number The time (in seconds) to advance the physics simulation.
 ---@param velocityiterations? number The maximum number of steps used to determine the new velocities when resolving a collision.
 ---@param positioniterations? number The maximum number of steps used to determine the new positions when resolving a collision.
 function World:update(dt, velocityiterations, positioniterations)
     self.world:update(dt, velocityiterations, positioniterations)
+    physics.executeQueuedFunctions()
+end
+
+---Adds a new fixture to the Collider.
+---@param name string The tag (userdata) of the fixture.
+---@param shapeType love.ShapeType The type of the shape of the fixture.
+---@param isSensor boolean If the fixture is a sensor or not.
+---@param offsetX number The offset x position of the fixture related to the body.
+---@param offsetY number The offset y position of the fixture related to the body.
+---@param ... any The parameters of the shape (radius for CircleShape, width and height for PolygonShape).
+function Collider:addFixture(name, shapeType, isSensor, offsetX, offsetY, ...)
+    assert(not self.fixtures[name], "Fixture with tag '" .. name .. "' already exists.")
+    self.fixtures[name] = physics.newFixture(name, self.body, shapeType, isSensor, offsetX, offsetY, ...)
+end
+
+---Draws the Collider.
+function Collider:draw()
+    local x, y = self.body:getPosition()
+    love.graphics.circle("fill", x, y, 2)
+
+    for _, fixture in pairs(self.fixtures) do
+        local shape = fixture:getShape()
+        if shape:getType() == "circle" then
+            ---@cast shape love.CircleShape
+            local cx, cy = self.body:getWorldPoint(shape:getPoint())
+            love.graphics.circle("line", cx, cy, shape:getRadius())
+        elseif shape:getType() == "polygon" then
+            ---@cast shape love.PolygonShape
+            love.graphics.polygon("line", self.body:getWorldPoints(shape:getPoints()))
+        end
+    end
 end
 
 ---Gets the body of the Collider.
@@ -184,56 +224,66 @@ function Collider:getBody()
     return self.body
 end
 
----Gets the fixture of the Collider.
+---Gets the ficture given its tag (userdata).
+---@param fixtureTag string The fixture tag (userdata).
 ---@return love.Fixture fixture The fixture of the Collider.
-function Collider:getFixture()
-    return self.fixture
+function Collider:getFixture(fixtureTag)
+    assert(self.fixtures[fixtureTag], "Fixture with tag '" .. fixtureTag .. "' does not exists.")
+    return self.fixtures[fixtureTag]
 end
 
----Draws the CircleCollider.
-function CircleCollider:draw()
-    love.graphics.circle("line", self.body:getX(), self.body:getY(), self.shape:getRadius())
+---Gets the fixtures of the Collider.
+---@return love.Fixture[] fixtures The fixtures of the Collider.
+function Collider:getFixtures()
+    return self.fixtures
 end
 
----Gets the shape of the CircleCollider.
----@return love.CircleShape circleShape The shape of the CircleCollider.
-function CircleCollider:getShape()
-    return self.shape
-end
-
----Draws the RectangleCollider.
-function RectangleCollider:draw()
-    love.graphics.polygon("line", self.body:getWorldPoints(self.shape:getPoints()))
-end
-
----Gets the height of the RectangleCollider.
----@return number height The height of the RectangleCollider.
-function RectangleCollider:getHeight()
-    local _, height = self:getSize()
+---Gets the height of the shape of the fixture.
+---@param fixtureTag string The tag (userdata) of the fixture.
+---@return number? height The height of the shape of the fixture.
+function Collider:getHeight(fixtureTag)
+    local _, height = self:getSize(fixtureTag)
+    assert(self.fixtures[fixtureTag]:getShape():getType() == "polygon", "Fixture must have a PolygonShape.")
     return height
 end
 
----Gets the shape of the RectangleCollider.
----@return love.PolygonShape polygonShape The shape of the RectangleCollider.
-function RectangleCollider:getShape()
-    return self.shape
+---Gets the size of the Collider.
+---@param fixtureTag string The tag (userdata) of the fixture.
+---@return number|nil width_or_radius The width/radius of the shape of the fixture.
+---@return number? height The height of the shape of the fixture.
+function Collider:getSize(fixtureTag)
+    assert(self.fixtures[fixtureTag], "Fixture with tag '" .. fixtureTag .. "' does not exists.")
+
+    ---@type love.Fixture
+    local fixture = self.fixtures[fixtureTag]
+    local shape = fixture:getShape()
+    if shape:getType() == "circle" then
+        ---@cast shape love.CircleShape
+        return shape:getRadius()
+    elseif shape:getType() == "polygon" then
+        ---@cast shape love.PolygonShape
+        local x1, y1, x2, _, _, _, _, y4 = self.body:getWorldPoints(shape:getPoints())
+        local width = x2 - x1
+        local height = y4 - y1
+        return width, height
+    end
 end
 
----Gets the size of the RectangleCollider.
----@return number width The width of the RectangleCollider.
----@return number height The height of the RectangleCollider.
-function RectangleCollider:getSize()
-    local x1, y1, x2, _, _, _, _, y4 = self.body:getWorldPoints(self.shape:getPoints())
-    local width = x2 - x1
-    local height = y4 - y1
-    return width, height
-end
-
----Gets the width of the RectangleCollider.
----@return number width The width of the RectangleCollider.
-function RectangleCollider:getWidth()
-    local width, _ = self:getSize()
+---Gets the height of the shape of the fixture.
+---@param fixtureTag string The tag (userdata) of the fixture.
+---@return number? width The width of the shape of the fixture.
+function Collider:getWidth(fixtureTag)
+    local width, _ = self:getSize(fixtureTag)
+    assert(self.fixtures[fixtureTag]:getShape():getType() == "polygon", "Fixture must have a PolygonShape.")
     return width
+end
+
+---Sets the sensor of the fixture true or false.
+---@param fixture love.Fixture The fixture to change the state of the sensor.
+---@param sensorState boolean The sensor state of the fixture.
+function Collider:setSensor(fixture, sensorState)
+    sensorState = sensorState or false
+    self.fixtures[fixture]:setSensor(sensorState)
 end
 
 return physics

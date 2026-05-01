@@ -49,18 +49,19 @@ end
 ---@param exit? function The function to be called when the state is exited.
 ---@return State state A new State object.
 function stateManager.newState(name, enter, update, draw, exit)
-	local _enter = enter or function() end
-	local _update = update or function(dt) end
-	local _draw = draw or function() end
-	local _exit = exit or function() end
+	enter  = enter or function() end
+	update = update or function(dt) end
+	draw   = draw or function() end
+	exit   = exit or function() end
+
 
 	---@type State
 	local self = {
 		name = name,
-		enter = _enter,
-		update = _update,
-		draw = _draw,
-		exit = _exit
+		enter = enter,
+		update = update,
+		draw = draw,
+		exit = exit
 	}
 	setmetatable(self, State)
 	return self

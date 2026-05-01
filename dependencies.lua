@@ -1,3 +1,5 @@
+require("src.globals")
+
 -- Lua
 require("src.libs.lua.math")
 require("src.libs.lua.string")
@@ -10,7 +12,7 @@ camera           = require("src.libs.love.camera")
 color            = require("src.libs.love.color")
 data             = require("src.libs.love.data")
 -- debugLove = require("src.libs.love.debug")
-entity           = require("src.libs.love.entity")
+-- entity           = require("src.libs.love.entity")
 imageManager     = require("src.libs.love.imageManager")
 input            = require("src.libs.love.input")
 physics          = require("src.libs.love.physics")

@@ -93,8 +93,10 @@ end
 ---@param last? number The last index of the sliced table. Default is the last key.
 ---@return table slicedTable The sliced table.
 function table.slice(t, first, last)
+	first = first or 1
+	last = last or #t
 	local sliced = {}
-	for i = first or 1, last or #t do
+	for i = first, last do
 		sliced[#sliced + 1] = t[i]
 	end
 	return sliced

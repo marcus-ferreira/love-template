@@ -34,15 +34,15 @@ Camera.__class = "Camera"
 ---@param followSpeed? number The speed at which the camera follows a target.
 ---@return Camera camera A new Camera object.
 function camera.newCamera(x, y, scale, followSpeed)
-	local _scale = scale or 1
-	local _followSpeed = followSpeed or 5
+	scale = scale or 1
+	followSpeed = followSpeed or 5
 
 	---@type Camera
 	local self = {
 		position = vector.newVector2(x, y),
-		scale = _scale,
+		scale = scale,
 		rotation = 0,
-		followSpeed = _followSpeed
+		followSpeed = followSpeed
 	}
 	setmetatable(self, Camera)
 	return self
@@ -74,7 +74,6 @@ function Camera:moveTo(x, y, dt)
 	local target = vector.newVector2(x, y)
 	local direction = target - self.position
 	local distance = direction:magnitude()
-
 	if distance < 0.1 then
 		self.position = target
 	else

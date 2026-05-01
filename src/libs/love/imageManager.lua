@@ -43,10 +43,11 @@ Grid.__class = "Grid"
 ---@param offsetY? number The margin in between tiles rows. Default = 0.
 ---@return Grid grid The Grid object.
 function imageManager.newGrid(tileWidth, tileHeight, columns, rows, width, height, left, top, offsetX, offsetY)
-    local _left = left or 0
-    local _top = top or 0
-    local _offsetX = offsetX or 0
-    local _offsetY = offsetY or 0
+    left    = left or 0
+    top     = top or 0
+    offsetX = offsetX or 0
+    offsetY = offsetY or 0
+
 
     ---@type Grid
     local self = {
@@ -57,12 +58,12 @@ function imageManager.newGrid(tileWidth, tileHeight, columns, rows, width, heigh
     for y = 0, rows - 1 do
         for x = 0, columns - 1 do
             local quad = love.graphics.newQuad(
-                _left + x * (tileWidth + _offsetX), -- x
-                _top + y * (tileHeight + _offsetY), -- y
-                tileWidth,                          -- width
-                tileHeight,                         -- height
-                width,                              -- sw
-                height                              -- sh
+                left + x * (tileWidth + offsetX), -- x
+                top + y * (tileHeight + offsetY), -- y
+                tileWidth,                        -- width
+                tileHeight,                       -- height
+                width,                            -- sw
+                height                            -- sh
             )
             self:addQuad(quad)
         end

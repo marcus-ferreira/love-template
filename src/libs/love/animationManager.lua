@@ -81,10 +81,11 @@ end
 ---@return Animation animation The new Animation object.
 function animationManager.newAnimation(name, img, grid, frames, originX, originY, interval, loop)
 	local tileSize = grid:getTileSize()
-	local _originX = originX or tileSize:getX() / 2
-	local _originY = originY or tileSize:getY() / 2
-	local _interval = interval or 1
-	local _loop = loop or false
+	originX        = originX or tileSize:getX() / 2
+	originY        = originY or tileSize:getY() / 2
+	interval       = interval or 1
+	loop           = loop or false
+
 
 	---@type Animation
 	local self = {
@@ -93,9 +94,9 @@ function animationManager.newAnimation(name, img, grid, frames, originX, originY
 		grid = grid,
 		frames = frames,
 		currentFrameIndex = 1,
-		originPoint = vector.newVector2(_originX, _originY),
-		interval = _interval,
-		loop = _loop,
+		originPoint = vector.newVector2(originX, originY),
+		interval = interval,
+		loop = loop,
 		timer = 0,
 		currentState = animationState.PLAYING
 	}
@@ -239,17 +240,17 @@ end
 ---@param sx? number The scaleX of the animation.
 ---@param sy? number The scaleY of the animation.
 function Animation:draw(x, y, rotation, sx, sy)
-	local _rotation = rotation or 0
-	local _sx = sx or 1
-	local _sy = sy or 1
+	rotation = rotation or 0
+	sx = sx or 1
+	sy = sy or 1
 	love.graphics.draw(
 		self.image,                          -- image
 		self.grid:getQuad(self.currentFrameIndex), -- quad
 		x,                                   -- x
 		y,                                   -- y
-		_rotation,                           -- rotation
-		_sx,                                 -- scaleX
-		_sy,                                 -- scaleY
+		rotation,                            -- rotation
+		sx,                                  -- scaleX
+		sy,                                  -- scaleY
 		self.originPoint:getX(),             -- originX
 		self.originPoint:getY()              -- originY
 	)
