@@ -19,7 +19,7 @@ local entity = {}
 ---@class Entity
 ---@field private stateManager StateManager The state manager of the entity.
 ---@field private animationManager AnimationManager The animation manager of the entity.
----@field private collider RectangleCollider|CircleCollider The collider of the entity.
+---@field private collider Collider The collider of the entity.
 ---@field private variables table<string, any> The table of variables of the entity.
 ---@field private __index? table The index of the Entity (for iterating).
 local Entity = {}
@@ -40,7 +40,7 @@ function entity.newEntity(world, x, y, width, height, type)
     local self = {
         stateManager = stateManager.newStateManager(),
         animationManager = animationManager.newAnimationManager(),
-        collider = physics.newRectangleCollider(world:getWorld(), x, y, width, height, type),
+        collider = physics.newCollider(world:getWorld(), x, y, width, height, type),
         variables = {}
     }
     setmetatable(self, Entity)

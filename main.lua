@@ -93,7 +93,7 @@ function love.update(dt)
 
     world:update(dt)
 
-    local speed = 100
+    local speed = 1000
     local vx = input.getAxis("left", "right", "leftx")
     local vy = input.getAxis("up", "down", "lefty")
     player.collider:getBody():applyForce(vx * speed, vy * speed)
