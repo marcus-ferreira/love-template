@@ -1,6 +1,7 @@
 --- Constants
-VIRTUAL_WIDTH = 400  -- Internal game width size
+VIRTUAL_WIDTH  = 400 -- Internal game width size
 VIRTUAL_HEIGHT = 300 -- Internal game height size
+Scale          = 1   -- Scale of the window dimension
 
 
 ---@enum Colors
@@ -52,42 +53,42 @@ end
 ---Resizes the window given a scale factor.
 ---@param scale number The scale factor.
 function ResizeWindow(scale)
-    WindowScale = scale
-    love.window.setMode(VIRTUAL_WIDTH * WindowScale, VIRTUAL_HEIGHT * WindowScale, {})
+    Scale = scale
+    love.window.setMode(VIRTUAL_WIDTH * Scale, VIRTUAL_HEIGHT * Scale, {})
 end
 
 ---Setups the inputs.
 function SetupInputs()
     input.setActionsKeys({
-        up     = {
+        ["up"]     = {
             keys    = { "up", "w" },
             buttons = { "dpup" },
             axes    = { "lefty-" }
         },
-        down   = {
+        ["down"]   = {
             keys    = { "down", "s" },
             buttons = { "dpdown" },
             axes    = { "lefty+" }
         },
-        left   = {
+        ["left"]   = {
             keys    = { "left", "a" },
             buttons = { "dpleft" },
             axes    = { "leftx-" }
         },
-        right  = {
+        ["right"]  = {
             keys    = { "right", "d" },
             buttons = { "dpright" },
             axes    = { "leftx+" }
         },
-        attack = {
+        ["attack"] = {
             keys    = { "space" },
             buttons = { "x" }
         },
-        jump   = {
+        ["jump"]   = {
             keys    = { "up", "w" },
             buttons = { "a" }
         },
-        quit   = {
+        ["quit"]   = {
             keys    = { "escape" },
             buttons = { "back" }
         }
