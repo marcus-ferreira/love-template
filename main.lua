@@ -1,84 +1,81 @@
--- Imports all dependencies
-require("dependencies")
-
 function love.load()
     -- Initializes the game settings
     love.graphics.setDefaultFilter("nearest", "nearest")
-    love.graphics.setNewFont("assets/fonts/love.ttf", 8)
-    love.graphics.setBackgroundColor(colors.sweetie16.BLACK)
+    require("dependencies")
     ResizeWindow(2)
     LoadAssets()
     SetupInputs()
+    love.graphics.setBackgroundColor(colors.sweetie16.BLACK)
+    love.graphics.setFont(assets.fonts["main"])
 
-    world = physics.newWorld({
-        callbacks = {
-            beginContact = function(fixtureA, fixtureB, contact)
-                local blockFixture = nil
-                if fixtureA:getUserData() == "block" then
-                    blockFixture = fixtureA
-                elseif fixtureB:getUserData() == "block" then
-                    blockFixture = fixtureB
+    input.setDeadzone(0)
+
+    world = physics.newWorld(0, 900, true, {
+        ---@param a love.Fixture
+        ---@param b love.Fixture
+        ---@param coll love.Contact
+        beginContact = function(a, b, coll)
+            local userDatas = { a:getUserData(), b:getUserData() }
+            if table.contains(userDatas, "footSensor") then
+                player:getCollider():addContact("ground")
+            elseif table.contains(userDatas, "leftSensor") or table.contains(userDatas, "rightSensor") then
+                player:getCollider():addContact("wall")
+            end
+        end,
+        ---@param a love.Fixture
+        ---@param b love.Fixture
+        ---@param coll love.Contact
+        endContact = function(a, b, coll)
+            local userDatas = { a:getUserData(), b:getUserData() }
+            if table.contains(userDatas, "footSensor") then
+                player:getCollider():removeContact("ground")
+            elseif table.contains(userDatas, "leftSensor") or table.contains(userDatas, "rightSensor") then
+                player:getCollider():removeContact("wall")
+            end
+        end
+    })
+
+    player = entity.newPlatformerEntity(world, 100, 100, 100, 300)
+    player:getCollider():addFixtures({
+        ["main"] = { "polygon", false, 0, 0, 24, 16 },
+        ["footSensor"] = { "polygon", true, 0, 8, 18, 4 },
+        ["leftSensor"] = { "polygon", true, -12, 0, 4, 10 },
+        ["rightSensor"] = { "polygon", true, 12, 0, 4, 10 }
+    })
+    player:getAnimationManager():addAnimations({
+        ["idle"] = { assets.images.player:getImage(), assets.images.player:getGrid(1), { 1 }, 16, 24 },
+        ["attack"] = { assets.images.player:getImage(), assets.images.player:getGrid(2), { 1, 2, 3, 4, 5 }, 16, 32, 0.07 }
+    })
+    player:getStateManager():addStates({
+        ["idle"] = {
+            enter = function()
+                player:getAnimationManager():changeAnimation("idle")
+            end,
+            update = function()
+                if input.isActionPressed("attack") then
+                    player:getStateManager():changeState("attack")
                 end
-                if blockFixture then
-                    physics.addQueuedFunction(function()
-                        blockFixture:getBody():setPosition(
-                            love.math.random(love.graphics.getWidth()),
-                            love.math.random(love.graphics.getHeight())
-                        )
-                    end)
+            end
+        },
+        ["attack"] = {
+            enter = function()
+                player:getAnimationManager():changeAnimation("attack")
+            end,
+            update = function()
+                if player:getAnimationManager():getCurrentAnimation():isEnded() then
+                    player:getStateManager():changeState("idle")
                 end
             end
         }
     })
 
-    player = {
-        animationManager = animationManager.newAnimationManager(),
-        collider = physics.newCollider(world, 100, 100, "dynamic", {
-            { "playerMain",   "circle", false, 0, 0, 10 },
-            { "playerSensor", "circle", true,  0, 0, 30 },
-        })
-    }
-    player.collider:getBody():setLinearDamping(0.5)
+    player:getStateManager():changeState("idle")
 
-    block = physics.newCollider(world, 200, 200, "static", {
-        { "block", "polygon", false, 0, 0, 60, 200 }
-    })
+    block = entity.newStaticEntity(world, 200, 300, "block", 400, 100)
+    block2 = entity.newStaticEntity(world, 16, VIRTUAL_HEIGHT / 2, "block", 32, VIRTUAL_HEIGHT)
 
 
 
-
-
-
-    -- local blockWidth, blockheight = 800, 96
-    -- block = entity.newEntity(world, blockWidth / 2, 209 + (blockheight / 2), blockWidth, blockheight, "static")
-
-    -- player:getAnimationManager():addAnimations({
-    --     idle = { assets.images.player:getImage(), assets.images.player:getGrid(1), { 1 }, 16, 24 },
-    --     attack = { assets.images.player:getImage(), assets.images.player:getGrid(2), { 1, 2, 3, 4, 5 }, 16, 32, 0.07 }
-    -- })
-    -- player:getStateManager():addStates({
-    --     idle = {
-    --         enter = function()
-    --             player:getAnimationManager():changeAnimation("idle")
-    --         end,
-    --         update = function()
-    --             if input.isActionPressed("attack") then
-    --                 player:getStateManager():changeState("attack")
-    --             end
-    --         end
-    --     },
-    --     attack = {
-    --         enter = function()
-    --             player:getAnimationManager():changeAnimation("attack")
-    --         end,
-    --         update = function()
-    --             if player:getAnimationManager():getCurrentAnimation():isEnded() then
-    --                 player:getStateManager():changeState("idle")
-    --             end
-    --         end
-    --     }
-    -- })
-    -- player:getStateManager():changeState("idle")
 
     -- map = tilemap.newTilemap("src.scenes.map", assets.images.tileset)
     -- cam = camera.newCamera(0, 0, 2)
@@ -93,24 +90,11 @@ function love.update(dt)
 
     world:update(dt)
 
-    local speed = 1000
-    local vx = input.getAxis("left", "right", "leftx")
-    local vy = input.getAxis("up", "down", "lefty")
-    player.collider:getBody():applyForce(vx * speed, vy * speed)
+    player:move(input.getAxis("left", "right", "leftx"), 0)
+    if input.isActionPressed("jump") and (player:isOnFloor() or player:isByWall()) then
+        player:jump()
+    end
 
-    local offset = 20
-    local x, y = player.collider:getBody():getPosition()
-    local windowWidth, windowHeight = love.graphics.getDimensions()
-    if x < -offset then
-        player.collider:getBody():setPosition(windowWidth + offset, y)
-    elseif x > windowWidth + offset then
-        player.collider:getBody():setPosition(-offset, y)
-    end
-    if y < -offset then
-        player.collider:getBody():setPosition(x, windowHeight + offset)
-    elseif y > windowHeight + offset then
-        player.collider:getBody():setPosition(x, -offset)
-    end
 
     -- cam:moveTo(playerx - (VIRTUAL_WIDTH / 2), playery - (VIRTUAL_HEIGHT / 2), dt)
 
@@ -118,12 +102,14 @@ function love.update(dt)
 end
 
 function love.draw()
+    love.graphics.scale(Scale, Scale)
+
+    player:draw()
     world:drawColliders()
 
     -- cam:setCamera()
 
     -- map:draw()
-    -- player:drawAll()
     -- block:drawAll()
 
     -- cam:unsetCamera()

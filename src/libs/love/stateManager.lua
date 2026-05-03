@@ -85,10 +85,10 @@ end
 ---@param states table<string, table<string, function>> The table of states parameters.
 function StateManager:addStates(states)
 	for name, functions in pairs(states) do
-		local enter  = functions["enter"]
-		local update = functions["update"]
-		local draw   = functions["draw"]
-		local exit   = functions["exit"]
+		local enter  = functions.enter
+		local update = functions.update
+		local draw   = functions.draw
+		local exit   = functions.exit
 		self:addState(name, enter, update, draw, exit)
 	end
 end

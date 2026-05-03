@@ -124,14 +124,14 @@ end
 ---Adds a batch of animations to the animation manager.
 ---@param animations table<string, any[]> The table of animations parameters.
 function AnimationManager:addAnimations(animations)
-	for name, parms in pairs(animations) do
-		local img      = parms[1]
-		local grid     = parms[2]
-		local frames   = parms[3]
-		local originX  = parms[4]
-		local originY  = parms[5]
-		local interval = parms[6]
-		local loop     = parms[7]
+	for name, params in pairs(animations) do
+		local img      = params[1]
+		local grid     = params[2]
+		local frames   = params[3]
+		local originX  = params[4]
+		local originY  = params[5]
+		local interval = params[6]
+		local loop     = params[7]
 		self:addAnimation(name, img, grid, frames, originX, originY, interval, loop)
 	end
 end

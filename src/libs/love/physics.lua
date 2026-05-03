@@ -14,6 +14,11 @@ local physics = {}
 physics.queuedFunctions = {}
 
 
+---@alias ContactTypes
+---| "ground"
+---| "wall"
+
+
 --- Classes
 ---@class World
 ---@field private world love.World The love.World.
@@ -26,8 +31,9 @@ World.__index = World
 World.__class = "World"
 
 ---@class Collider
----@field protected body love.Body The body of the Collider.
----@field protected fixtures table<string, love.Fixture> The fixtures of the Collider.
+---@field private body love.Body The body of the Collider.
+---@field private fixtures table<string, love.Fixture> The fixtures of the Collider.
+---@field private contacts table<ContactTypes, number> The type and count of contacts of the Collider.
 ---@field private __index? table The index of the Collider (for iterating).
 ---@field private __class? string The class of the Collider.
 local Collider = {}
@@ -51,14 +57,17 @@ function physics.executeQueuedFunctions()
 end
 
 ---Creates a World object.
----@param config? table The configs of the World (xg, yg, sleep and callbacks).
+---@param xg? number # The x component of gravity.
+---@param yg? number # The y component of gravity.
+---@param sleep? boolean # Whether the bodies in this world are allowed to sleep.
+---@param callbacks? table<string, function> The callback functions of the World.
 ---@return World world A new World object.
-function physics.newWorld(config)
-    config          = config or {}
-    local xg        = config.xg or 0
-    local yg        = config.yg or 0
-    local sleep     = config.sleep ~= nil and config.sleep or true
-    local callbacks = config.callbacks or {
+function physics.newWorld(xg, yg, sleep, callbacks)
+    callbacks = callbacks or {}
+    xg        = xg or 0
+    yg        = yg or 0
+    sleep     = sleep ~= nil and sleep or true
+    callbacks = callbacks or {
         beginContact = function(fixtureA, fixtureB, contact) end,
         endContact   = function(fixtureA, fixtureB, contact) end,
         preSolve     = function(fixtureA, fixtureB, contact) end,
@@ -82,34 +91,22 @@ end
 ---@param x number The X coordinate of the Collider.
 ---@param y number The Y coordinate of the Collider.
 ---@param bodyType love.BodyType The type of the body of the Collider.
----@param fixtures love.Fixture[] The table of fixtures of the Collider.
+---@param fixtures? table<string, any[]> The table of fixtures of the Collider.
 ---@return Collider collider A new Collider object.
 function physics.newCollider(world, x, y, bodyType, fixtures)
+    fixtures = fixtures or {}
     local body = love.physics.newBody(world:getWorld(), x, y, bodyType)
     body:setFixedRotation(true)
+
+
     ---@type Collider
     local self = {
         body = body,
-        fixtures = {}
+        fixtures = {},
+        contacts = {}
     }
     setmetatable(self, Collider)
-
-    for _, fixture in ipairs(fixtures) do
-        local name      = fixture[1]
-        local shapeType = fixture[2]
-        local isSensor  = fixture[3]
-        local offsetX   = fixture[4]
-        local offsetY   = fixture[5]
-        if shapeType == "circle" then
-            local radius = fixture[6]
-            self:addFixture(name, shapeType, isSensor, offsetX, offsetY, radius)
-        elseif shapeType == "polygon" then
-            local width  = fixture[6]
-            local height = fixture[7]
-            self:addFixture(name, shapeType, isSensor, offsetX, offsetY, width, height)
-        end
-    end
-
+    self:addFixtures(fixtures)
     world:addCollider(self)
     return self
 end
@@ -136,7 +133,7 @@ function physics.newFixture(name, body, shapeType, isSensor, offsetX, offsetY, .
     local fixture = love.physics.newFixture(body, shape)
     fixture:setFriction(0)
     fixture:setUserData(name)
-    fixture:setSensor(isSensor or false)
+    fixture:setSensor(isSensor)
 
     return fixture
 end
@@ -185,7 +182,18 @@ end
 ---@param positioniterations? number The maximum number of steps used to determine the new positions when resolving a collision.
 function World:update(dt, velocityiterations, positioniterations)
     self.world:update(dt, velocityiterations, positioniterations)
-    physics.executeQueuedFunctions()
+    if #physics.queuedFunctions > 0 then
+        physics.executeQueuedFunctions()
+    end
+end
+
+---Adds a contact from the type to the Collider.
+---@param type ContactTypes The type of the contact.
+function Collider:addContact(type)
+    if not self.contacts[type] then
+        self.contacts[type] = 0
+    end
+    self.contacts[type] = self.contacts[type] + 1
 end
 
 ---Adds a new fixture to the Collider.
@@ -198,6 +206,25 @@ end
 function Collider:addFixture(name, shapeType, isSensor, offsetX, offsetY, ...)
     assert(not self.fixtures[name], "Fixture with tag '" .. name .. "' already exists.")
     self.fixtures[name] = physics.newFixture(name, self.body, shapeType, isSensor, offsetX, offsetY, ...)
+end
+
+---Adds a batch of fixtures to the Collider.
+---@param fixtures table<string, any[]> The table of fixtures parameters.
+function Collider:addFixtures(fixtures)
+    for name, params in pairs(fixtures) do
+        local shapeType = params[1]
+        local isSensor  = params[2]
+        local offsetX   = params[3]
+        local offsetY   = params[4]
+        if shapeType == "circle" then
+            local radius = params[5]
+            self:addFixture(name, shapeType, isSensor, offsetX, offsetY, radius)
+        elseif shapeType == "polygon" then
+            local width  = params[5]
+            local height = params[6]
+            self:addFixture(name, shapeType, isSensor, offsetX, offsetY, width, height)
+        end
+    end
 end
 
 ---Draws the Collider.
@@ -222,6 +249,13 @@ end
 ---@return love.Body body The body of the Collider.
 function Collider:getBody()
     return self.body
+end
+
+---Gets the count of a type of contacts.
+---@param type ContactTypes The type of the contact.
+---@return number contactCount The count of the type of the contact.
+function Collider:getContactCount(type)
+    return self.contacts[type] or 0
 end
 
 ---Gets the ficture given its tag (userdata).
@@ -276,6 +310,19 @@ function Collider:getWidth(fixtureTag)
     local width, _ = self:getSize(fixtureTag)
     assert(self.fixtures[fixtureTag]:getShape():getType() == "polygon", "Fixture must have a PolygonShape.")
     return width
+end
+
+---Checks if the Collider is touching a type of contact.
+---@param type ContactTypes The type of the contact.
+---@return boolean isTouching True if is touching, false otherwise.
+function Collider:isTouching(type)
+    return self:getContactCount(type) > 0
+end
+
+---Removes a contact from the type from the Collider.
+---@param type ContactTypes The type of the contact.
+function Collider:removeContact(type)
+    self.contacts[type] = self.contacts[type] - 1
 end
 
 ---Sets the sensor of the fixture true or false.
