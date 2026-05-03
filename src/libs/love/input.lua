@@ -211,4 +211,11 @@ function input.setActionsKeys(actions)
     end
 end
 
+---Sets a new gamepad deadzone value.
+---@param value number The new value of the gamepad deadzone.
+function input.setDeadzone(value)
+    assert(value >= 0 or value <= 1, "Invalid deadzone value.")
+    input.gamepadDeadzone = value
+end
+
 return input
