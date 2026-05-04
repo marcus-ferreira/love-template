@@ -1,6 +1,7 @@
 --- Constants
 VIRTUAL_WIDTH  = 400 -- Internal game width size
 VIRTUAL_HEIGHT = 300 -- Internal game height size
+
 Scale          = 1   -- Scale of the window dimension
 
 
@@ -35,12 +36,12 @@ function LoadAssets()
     local manifest = require("src.assets")
     assets = { fonts = {}, images = {}, sounds = {} }
 
-    for name, parms in pairs(manifest.fonts) do
-        assets.fonts[name] = love.graphics.newFont(parms.path, parms.size)
+    for name, params in pairs(manifest.fonts) do
+        assets.fonts[name] = love.graphics.newFont(params.path, params.size)
     end
 
-    for name, parms in pairs(manifest.images) do
-        assets.images[name] = imageManager.newImageManager(parms.path, parms.grids)
+    for name, params in pairs(manifest.images) do
+        assets.images[name] = imageManager.newImageManager(params.path, params.grids)
     end
 
     for name, path in pairs(manifest.sounds) do
