@@ -25,14 +25,15 @@ require("src.libs.lua.table")
 
 --- Library
 ---@class input
-local input = {}
----@type table<string, table<string, string[]>>
-input.actions = {}
----@type table<string, boolean>
-input.pressedKeys = {}
----@type table<love.Joystick, table<string, boolean>>
-input.pressedButtons = {}
-input.gamepadDeadzone = 0.15
+local input = {
+    ---@type table<string, table<string, string[]>>
+    actions         = {},
+    ---@type table<string, boolean>
+    pressedKeys     = {},
+    ---@type table<love.Joystick, table<string, boolean>>
+    pressedButtons  = {},
+    gamepadDeadzone = 0.15
+}
 
 
 --- Methods
