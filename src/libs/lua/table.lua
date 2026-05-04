@@ -17,6 +17,33 @@ function table.contains(t, value)
 	return false
 end
 
+---Checks if a table contains all the values.
+---@param t table The table to check on.
+---@param values table The table of value to check.
+---@return boolean contains True if the table contains all the values, false if otherwise.
+function table.containsAll(t, values)
+	local count = 0
+	for _, value in ipairs(values) do
+		if table.contains(t, value) then
+			count = count + 1
+		end
+	end
+	return count == #values
+end
+
+---Checks if a table contains any of the values.
+---@param t table The table to check on.
+---@param values table The table of value to check.
+---@return boolean contains True if the table contains any of the values, false if otherwise.
+function table.containsAny(t, values)
+	for _, value in ipairs(values) do
+		if table.contains(t, value) then
+			return true
+		end
+	end
+	return false
+end
+
 ---Deserialize a string to a table.
 ---@param str string The string to be deserialized.
 ---@return table deserializedTable The deserialize table.
