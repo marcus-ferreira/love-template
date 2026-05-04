@@ -13,6 +13,11 @@ local vector = {}
 ---@class Vector2
 ---@field private x number The X component of the vector.
 ---@field private y number The Y component of the vector.
+---@field private __add? function The callback function for adding.
+---@field private __sub? function The callback function for subtracting.
+---@field private __mul? function The callback function for multipling.
+---@field private __div? function The callback function for dividing.
+---@field private __tostring? function The callback function for printing.
 ---@field private __index? table The index of the vector (for iterating).
 ---@field private __class? string The class of the vector.
 local Vector2 = {}
