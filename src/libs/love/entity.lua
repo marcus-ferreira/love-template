@@ -41,13 +41,17 @@ Entity.__class = "Entity"
 ---@param x number The X coordinate of the Entity.
 ---@param y number The Y coordinate of the Entity.
 ---@param bodyType love.BodyType The type of the body of the collider of the Entity.
+---@param config? table The table of the fixtures, animations and states of the Entity.
 ---@return Entity entity A new Entity object.
-function entity.newEntity(world, x, y, bodyType)
+function entity.newEntity(world, x, y, bodyType, config)
+    config = config or {}
+
+
     ---@type Entity
     local self = {
-        stateManager = stateManager.newStateManager(),
-        animationManager = animationManager.newAnimationManager(),
-        collider = physics.newCollider(world, x, y, bodyType),
+        stateManager = stateManager.newStateManager(config.states),
+        animationManager = animationManager.newAnimationManager(config.animations),
+        collider = physics.newCollider(world, x, y, bodyType, config.fixtures),
         behaviors = {},
         variables = {}
     }
@@ -61,13 +65,14 @@ end
 ---@param y number The Y coordinate of the Entity.
 ---@param speed? number The value of the speed variable of the Entity.
 ---@param jumpForce? number The value of the jumpForce variable of the Entity.
+---@param config? table The table of the fixtures, animations and states of the Entity.
 ---@return Entity entity A new Entity object.
-function entity.newPlatformerEntity(world, x, y, speed, jumpForce)
+function entity.newPlatformerEntity(world, x, y, speed, jumpForce, config)
     speed     = speed or 100
     jumpForce = jumpForce or 300
 
 
-    local self = entity.newEntity(world, x, y, "dynamic")
+    local self = entity.newEntity(world, x, y, "dynamic", config)
     self:addBehavior("platformer")
     self:setVariables({
         ["speed"] = speed,
@@ -78,13 +83,13 @@ end
 
 ---Shorthand function to create a new static Entity.
 ---@param world World The world for the collider of the Entity.
+---@param name string The name of the fixture of the Entity.
 ---@param x number The X coordinate of the Entity.
 ---@param y number The Y coordinate of the Entity.
----@param name string The name of the fixture of the Entity.
 ---@param width number The width of the Entity.
 ---@param height number The height of the Entity.
 ---@return Entity entity A new Entity object.
-function entity.newStaticEntity(world, x, y, name, width, height)
+function entity.newStaticEntity(world, name, x, y, width, height)
     local self = entity.newEntity(world, x, y, "static")
     self:getCollider():addFixture(name, "polygon", false, 0, 0, width, height)
     return self
@@ -189,6 +194,12 @@ function Entity:move(vx, vy)
         local _, currentVY = self.collider:getBody():getLinearVelocity()
         local targetVX = vx * self.variables["speed"]
         self.collider:getBody():setLinearVelocity(targetVX, currentVY)
+
+        if vx < 0 then
+            self.animationManager:flipAnimationsHorizontally(true)
+        elseif vx > 0 then
+            self.animationManager:flipAnimationsHorizontally(false)
+        end
     end
 end
 
