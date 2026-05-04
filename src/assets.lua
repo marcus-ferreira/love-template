@@ -5,11 +5,16 @@ return {
     images = {
         player = {
             path = "assets/images/ivysaur.png",
-            grids = { { 32, 32, 10, 2 }, { 74, 40, 5, 1, 0, 64 } }
+            grids = {
+                { tileWidth = 32, tileHeight = 32, columns = 10, rows = 2 },
+                { tileWidth = 74, tileHeight = 40, columns = 5,  rows = 1, top = 64 }
+            }
         },
         tileset = {
             path = "assets/images/tileset.png",
-            grids = { { 16, 16, 17, 10 } }
+            grids = {
+                { tileWidth = 16, tileHeight = 16, columns = 17, rows = 10 }
+            }
         }
     },
     sounds = {}
