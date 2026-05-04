@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="48" height="19" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="1">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="48" height="19" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="6">
  <editorsettings>
   <export target="../../src/scenes/map.lua" format="lua"/>
  </editorsettings>
- <tileset firstgid="1" source="../tilesets/tileset.tsx"/>
+ <tileset firstgid="1" source="tileset.tsx"/>
  <layer id="1" name="Camada de Blocos 1" width="48" height="19">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

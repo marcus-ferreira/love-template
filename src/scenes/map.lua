@@ -9,14 +9,14 @@ return {
   height = 19,
   tilewidth = 16,
   tileheight = 16,
-  nextlayerid = 2,
-  nextobjectid = 1,
+  nextlayerid = 3,
+  nextobjectid = 6,
   properties = {},
   tilesets = {
     {
       name = "tileset",
       firstgid = 1,
-      filename = "../../assets/images/tileset.tsx"
+      filename = "../../assets/tiled/tileset.tsx"
     }
   },
   layers = {
