@@ -30,14 +30,19 @@ State.__class = "State"
 
 --- Methods
 ---Creates a new StateManager object.
+---@param states? table<string, table<string, function>> The table of states parameters.
 ---@return StateManager stateManager The new StateManager object.
-function stateManager.newStateManager()
+function stateManager.newStateManager(states)
+	states = states or {}
+
+
 	---@type StateManager
 	local self = {
 		states = {},
 		currentState = nil
 	}
 	setmetatable(self, StateManager)
+	self:addStates(states)
 	return self
 end
 

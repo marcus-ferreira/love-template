@@ -55,8 +55,12 @@ Animation.__class = "Animation"
 
 --- Methods
 ---Creates a new AnimationManager object.
+---@param animations? table<string, any[]> The table of animations parameters.
 ---@return AnimationManager animationManager The new AnimationManager object.
-function animationManager.newAnimationManager()
+function animationManager.newAnimationManager(animations)
+	animations = animations or {}
+
+
 	---@type AnimationManager
 	local self = {
 		animations = {},
@@ -66,6 +70,7 @@ function animationManager.newAnimationManager()
 		scaleY = 1
 	}
 	setmetatable(self, AnimationManager)
+	self:addAnimations(animations)
 	return self
 end
 
