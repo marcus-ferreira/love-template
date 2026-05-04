@@ -7,8 +7,9 @@ function love.load()
     SetupInputs()
     love.graphics.setBackgroundColor(colors.sweetie16.BLACK)
     love.graphics.setFont(assets.fonts["main"])
-
     input.setDeadzone(0)
+    camera.setScale(2)
+    camera.setFollowSpeed(10)
 
     world = physics.newWorld(0, 900, true, {
         ---@param a love.Fixture
@@ -79,8 +80,6 @@ function love.load()
         entity.newStaticEntity(world, "wall", -7.5, VIRTUAL_HEIGHT / 2, 15, VIRTUAL_HEIGHT),
         entity.newStaticEntity(world, "ground", mapWidth / 2, mapHeight - 47.5, mapWidth, 95)
     }
-
-    -- cam = camera.newCamera(0, 0, 2)
 end
 
 ---@param dt number
@@ -94,22 +93,25 @@ function love.update(dt)
     player:update(dt)
 
     player:move(input.getAxis("left", "right", "leftx"), 0)
-    if input.isActionPressed("jump") and (player:isOnFloor() or player:isByWall()) then
+    if input.isActionPressed("jump") then
         player:jump()
     end
 
 
-    -- cam:moveTo(playerx - (VIRTUAL_WIDTH / 2), playery - (VIRTUAL_HEIGHT / 2), dt)
+    local playerX, playerY = player:getCollider():getBody():getPosition()
+    local mapWidth, mapHeight = map:getMapSizeInPixels():getCoordinates()
+    local playerDirection = player:getAnimationManager():getScaleX()
+    local cameraX = math.clamp(0, playerX - (VIRTUAL_WIDTH / 2) + (playerDirection * 60), mapWidth - VIRTUAL_WIDTH)
+    local cameraY = math.clamp(0, playerY - (VIRTUAL_HEIGHT / 2), mapHeight - VIRTUAL_HEIGHT - 4)
+    camera.moveTo(cameraX, cameraY, dt)
 
     input.resetPressedKeys()
 end
 
 function love.draw()
-    love.graphics.scale(Scale, Scale)
-
-    -- cam:setCamera()
+    camera.set()
     map:draw()
     player:draw()
     world:drawColliders()
-    -- cam:unsetCamera()
+    camera.unset()
 end
